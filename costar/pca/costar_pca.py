@@ -1,13 +1,25 @@
 #%%
 
+# data processing
 import numpy as np
 import pandas as pd
 from datetime import date
 import datetime as dt
-import seaborn as sns
-import matplotlib.pyplot as plt
 import pyodbc 
-pd.set_option("display.max_columns",999)
+
+
+# modeling
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import roc_curve, roc_auc_score
+from sklearn.decomposition import PCA
+from sklearn.pipeline import Pipeline
+
+# plotting
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 # %%
 
 def query_costar(query):
