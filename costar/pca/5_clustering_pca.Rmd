@@ -1,0 +1,296 @@
+---
+title: "Principal Component Analysis and Clustering in R"
+author: "Paul Brooks"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r results='asis',warning=FALSE,echo=FALSE}
+library(knitr)
+library(rgl)
+knit_hooks$set(rgl=hook_rgl)
+knit_hooks$set(webgl = hook_webgl)
+cat('<script type="text/javascript">', readLines(system.file('WebGL', 
+    'CanvasMatrix.js', package = 'rgl')), '</script>', sep = '\n')
+hook_plot = knit_hooks$get('plot')
+knit_hooks$set(plot = function(x, options) paste('\n', hook_plot(x, options), sep = ''))
+```
+
+Don't forget to set your working directory (Session -> Set Working Directory)!
+
+Load packages.
+```{r message=FALSE, warning=FALSE}
+library(dplyr)
+library(dummies)
+library(rgl)
+library(cluster)
+```
+
+Set the random number generator seed so that we get the same results each time.
+```{r}
+set.seed(12345)
+```
+
+## Read Data
+
+Read in the clean home data.
+
+```{r}
+home_data <- read.table("home_data_clean.csv", header=TRUE, row.names=1, sep=",",
+                       comment.char="", colClasses=c("character", 
+                       rep("factor",2), rep("numeric",4), rep("factor",3))) 
+```
+
+Read in the SENIC data. 
+
+```{r}
+senic_data <- read.table("SENIC.csv", header=TRUE, row.names=1, sep=",",
+                        colClasses=c(rep("numeric",7),rep("factor",2),
+                        rep("numeric",9), rep("factor",2)))
+```                      
+
+Read in the 2019 procurement data.  The data will be in a data frame called eva_2019.
+```{r}
+load("eva_2019.rda")
+```
+
+
+## Cluster Analysis
+
+We will use the number of bedrooms, number of bathrooms, square footage, and realtor group to cluster the homes.  First, create dummy variables for the realtor group variable.  
+
+Create one column for each realtor group and drop the original column.
+```{r message=FALSE, warning=FALSE}
+home_df <- dummy.data.frame(home_data[,c("Bedrooms", 
+                                         "Baths", 
+                                         "Sq..Ft.", 
+                                         "Price", 
+                                         "Realtor.Group")],
+                           names="Realtor.Group")
+head(home_df)
+```
+Now that all of the columns are encoded as numeric, scale and center the data.  This step is necessary because the variables are measured on very different scales.  If we did not center and scale, differences in price would be magnified much more than differences in realtor group or number of bathrooms.
+
+If each column were all measured on the same scale, then this step would not be necessary.  For example, suppose each column of a dataset corresponded to a response to a survey question on a 5-point scale.  All columns are measured on the same scale, so scaling is not necessary.
+
+
+```{r}
+home_df <- scale(home_df, center=TRUE, scale=TRUE)
+head(home_df)
+```
+
+Cluster the home data into four groups with k-means clustering.  
+
+```{r}
+home_kmeans <- kmeans(home_df, centers=4)
+```
+
+Plot the clusters on the first two principal components.  The blue, red, and black clusters are mostly well-separated.  The green cluster seems to overlap the red and blue clusters.
+```{r}
+home_pca <- prcomp(home_df, retx=TRUE)
+plot(home_pca$x[,1:2], col=home_kmeans$cluster, pch=home_kmeans$cluster)
+```
+
+Create a silhouette plot that indicates how well each point belongs to its cluster.  First, we need to calculate the distance between every pair of points with the *dist()* function.  
+
+In the silhouette plot, a longer bar to the right indicates stronger cluster membership.  A bar to the left indicates that the point is nearer to other clusters.  All of the points in cluster 1 are well clustered, having positive silhouette coefficients.  There are a few points in cluster 2 with small negative coefficients.  The points in clusters 3 and 4 appear to be well clustered.
+
+```{r}
+home_dist <- dist(home_df)
+home_sil <- silhouette(home_kmeans$cluster, home_dist)
+plot(home_sil)
+```
+
+
+We created a principal component analysis (PCA) object above and used it to evaluate the clusters.  The PCA object has more information about the patterns in the data that we describe below.
+
+The variance explained by the first principal component is 24.8%, the variance explained by the second component is an additional 14.8%, and the variance explained by the third component is an additional 13.1%.  The cumulative proportion of variance explained on the first two components is 39.6% and on the first three components is 52.6%.
+
+```{r}
+summary(home_pca)
+```
+
+The rotation matrix indicates that the first PC is associated with the size of houses.  The largest loadings are for the number of bedrooms, bathrooms, and square footage, and they all have the same sign.  On the PCA plot, houses on the right side of the plot will be associated with more bedrooms, more bathrooms, and more square footage while those on the left side will have lower values for each.  
+
+The second PC is associated with a tradeoff between using Long & Foster and not using a top 5 realtor.  The loadings for those are large and have opposite signs.  Houses near the top of the PCA plot are more likely to be Long & Foster and houses near the bottom are more likely to not use a top 5 realtor.
+
+The third PC is associated with a tradeoff between using REMAX and not using a top 5 realtor.  The loadings for those are large and have opposite signs.
+
+```{r}
+home_pca$rotation
+```
+
+Plot a scree plot.  Ordinarily, we would look for an "elbow" in the plot where there is a sharp drop off in variance explained.  After the first component, the variance explained tapers off gradually, meaning that the variation in the original data is not captured by only the first few PCs.
+```{r}
+plot(home_pca)
+```
+
+Consider again the plot on the first two PCs of the clustering.  Note that the outlier seems to affect strongly the second principal component.  It would probably be wise to repeat the analysis with the outlier removed.  
+
+The black cluster, located at the top of the plot, is associated with a Long & Foster realtor.  The blue cluster, with houses located mostly in the bottom left of the plot, is associated with smaller houses and not top 5 realtors.  The red cluster, located in the bottom right of the plot, is characterized by larger houses and Long & Foster realtors.  The green cluster is spread across PC 1 and is centered at 0 on PC 2 and so appears to have both large and small houses, and neither Long & Foster nor not top 5 realtors.
+
+
+We can also plot the scores on the first three PCs, with colors based on cluster membership from kmeans clustering.  The third component identifies two subgroups for the blue cluster, likely due to different realtors.  
+```{r rgl=TRUE}
+plot3d(home_pca$x[,1:3],col=home_kmeans$cluster)
+```
+
+## Solutions to Exercises
+
+### SENIC Data
+
+Select non-redundant columns.  Define dummy variables for the "Region_Name" and "Medical_School" fields.
+```{r warning=FALSE} 
+senic_df <- senic_data %>%
+    dplyr::select(Length_stay,Age_years,Infection_pct, 
+           Culture_ratio,X_ray_ratio,Num_Beds, 
+           Num_Patients,Num_Nurses,Avail_Services, 
+           Num_Services,
+           Region_Name,Medical_School)
+senic_df <- dummy.data.frame(senic_df, names=c("Region_Name", "Medical_School"))
+```
+
+1. Cluster the hospitals into five groups.  Plot the clusters on the first two principal components.
+
+Because the data are measured on different scales, center and scale the data.
+
+```{r}
+senic_df <- scale(senic_df, center=TRUE, scale=TRUE)
+```
+
+Cluster the data using k-means clustering.
+```{r}
+senic_kmeans <- kmeans(senic_df, centers=5)
+```
+
+Plot the clusters on the first two principal components.  The clusters appear reasonably well separated.
+```{r}
+senic_pca <- prcomp(senic_df, retx=TRUE)
+plot(senic_pca$x[,1:2], col=senic_kmeans$cluster, pch=senic_kmeans$cluster)
+```
+
+2. What is the variation explained by the first two principal components combined?  
+   
+The variance explained is 51.9%.
+
+```{r}
+summary(senic_pca)
+```
+
+3. Which variables are responsible for the variation among hospitals in this dataset?
+
+The first principal is determined by hospital size and a tradeoff in whether there is a medical school.  The second principal component is based on infection rate, culture ratio, and x ray ratio.
+```{r}
+senic_pca$rotation[,1:2]
+```
+
+4. Describe the clusters.
+
+The teal cluster is on the left side of the plot and includes smaller hospitals with lower infection rates.  The black cluster includes larger hospitals than the teal cluster, followed by red, green, and blue based on their location on PC 1.  The green cluster, located near the top of the plot, tends to have higher infection rates and has more hospitals from the northeast.
+
+
+5.  Do the hospitals tend to cluster by region?
+   
+There are some observable patterns in the plot by region below.  In particular, we see that most of the hospitals in the northeast are near the top of the plot.  Otherwise, the clustering of hospitals is not as clear as it is when using kmeans.
+```{r}
+plot(senic_pca$x[,1:2], 
+     col=as.numeric(senic_data$Region_Name), 
+     pch=as.numeric(senic_data$Region_Name))
+legend("topleft", 
+       legend=levels(senic_data$Region_Name),
+       col=1:nlevels(senic_data$Region_Name), 
+       pch=1:nlevels(senic_data$Region_Name))
+
+```
+
+### Procurement Data
+
+Note: Because of the size of the dataset, I don't recommend trying to create a silhouette plot.  There are 1.9 million transactions, so observing the bars would be difficult, if not impossible.   Also, we would need to calculate distances between every pair transactions - that would be 1.8 trillion distances!  
+
+Answer the following questions for the VCU transactions using the unit price, quantity ordered, total cost, and SWAM status.
+
+```{r}
+vcu_df <- eva_2019 %>%
+  dplyr::filter(Entity.Description == "Virginia Commonwealth University")  %>%
+  dplyr::select(Unit.Price, 
+                Quantity.Ordered,
+                Total.Cost,
+                SWAM.Minority,
+                SWAM.Woman,
+                SWAM.Small,
+                SWAM.Micro.Business)
+```
+
+Convert the SWAM columns from factor to numeric.
+```{r}
+vcu_df[,grep("SWAM", colnames(vcu_df))] <- lapply(vcu_df[,grep("SWAM", colnames(vcu_df))], 
+                                                  FUN=function(x) {
+                                                    as.numeric(as.character(x))
+                                                  }) 
+
+```
+
+
+There are missing values for several of the SWAM columns.  I am going to select rows with no missing values for the clustering.  There is nothing inherently correct in this decision, but the factors I considered include the fact that most of the missing values are confined to a small percentage of the transactions.  Ordinarily, it would be prudent to further investigate the nature of the missing values to determine if we are excluding a particular set of transactions and consider whether that is important.
+```{r}
+vcu_df <- vcu_df[apply(is.na(vcu_df),1,sum) == 0,]
+```
+
+1. Cluster the transactions into four groups.  Plot the clusters on the first two principal components.
+
+There are outliers in unit price, quantity ordered, and total cost, so I am going to remove points that are outliers.  I'll use boxplots to identify outliers and keep points that are within the whiskers of each boxplot.
+```{r}
+price_stat <- boxplot(vcu_df$Unit.Price)$stat
+vcu_df <- vcu_df[vcu_df$Unit.Price > price_stat[1,1] & 
+                 vcu_df$Unit.Price < price_stat[5,1],] 
+quantity_stat <- boxplot(vcu_df$Quantity.Ordered)$stat
+vcu_df <- vcu_df[vcu_df$Quantity.Ordered > quantity_stat[1,1] & 
+                 vcu_df$Quantity.Ordered < quantity_stat[5,1],] 
+cost_stat <- boxplot(vcu_df$Total.Cost)$stat
+vcu_df <- vcu_df[vcu_df$Total.Cost > cost_stat[1,1] & 
+                 vcu_df$Total.Cost < cost_stat[5,1],] 
+
+```
+
+Because the data are measured on different scales, center and scale the data.
+
+```{r}
+vcu_df <- scale(vcu_df, center=TRUE, scale=TRUE)
+```
+
+Cluster the data using k-means clustering.
+```{r}
+vcu_kmeans <- kmeans(vcu_df, centers=4)
+```
+
+Plot the clusters on the first two principal components.  We see about 16 "lines" in the plot.  Each one likely corresponds to the $2^4 = 16$ different possible combinations of SWAM values.  The inclusion of these discrete values (0 or 1) leads to the discrete structure in the plot.
+```{r}
+vcu_pca <- prcomp(vcu_df, retx=TRUE)
+plot(vcu_pca$x[,1:2], col=vcu_kmeans$cluster, pch=vcu_kmeans$cluster)
+```
+
+2. What is the variation explained by the first two principal components combined?  
+   
+The variance explained is 56.2%.
+
+```{r}
+summary(vcu_pca)
+```
+
+3. Which variables are responsible for the variation among transactions in this dataset?
+
+The first principal is determined by a tradeoff between price and cost versus Woman and Small.  Points on the right will tend to be larger transactions and less likely to be with woman-owned and small businesses while points on the left will tend to be smaller transactions and more likely to be with woman-owned and small businesses.   The second principal component has large loadings for price, cost, small, woman-owned, and micro businesses.  Transactions near the top will be larger and more likely to be from small and micro businesses.
+```{r}
+vcu_pca$rotation
+```
+
+4. Describe the clusters.
+
+The blue cluster is on the top left of the plot and is more likely to be larger transactions with woman-owned, small, or micro businesses.  By comparison, the green, red, and black clusters are toward the bottom right of the plot and are therefore more likely associated with smaller transactions.  The green cluster tends to be near the bottom of the plot, indicating that they are less likely to be with woman-owned, small, or micro businesses.  The red cluster is near the top which indicates transactions with woman-owned, small, or micro businesses.  The black cluster is spread out along PC 2 and so there are likely a mix of values.
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results="hide", eval=FALSE}
+purl("5_clustering_pca.Rmd")
+```
