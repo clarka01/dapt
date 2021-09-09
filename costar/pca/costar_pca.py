@@ -1,3 +1,13 @@
+# how to adjust for lease start time? inflation plays into this.
+    # do we group in years of 2, 3, 4, 5?
+    # match this against economic data
+# construction year might turn into 'age'
+# buildingrating id is categorical--cluster analysis may be needed...
+# use submarket vs CBSID?
+# calculate STD for each region in terms of rent
+    #which submarkets have the most variance? within AND outside of buildingratingid
+# link population to this?
+
 #%%
 
 # data processing
@@ -6,7 +16,6 @@ import pandas as pd
 from datetime import date
 import datetime as dt
 import pyodbc 
-
 
 # modeling
 from sklearn.model_selection import train_test_split
@@ -47,12 +56,11 @@ def merge_lease_geo():
     df2 = query_costar(q2)
 
     df = pd.merge(df1, df2, 
-                        how = 'left', 
+                        how = 'inner', 
                         left_on = 'leasedealid',
                         right_on = 'LeaseDealID')
 
-    null_count = df.isna().sum()
-    null_pct = df.isna().sum()/df.shape[0]
+
 
     drop_cols = ['estimatedrent_x']
 
@@ -63,8 +71,16 @@ def merge_lease_geo():
 df = merge_lease_geo()
 df.head()
 
+#%%
+
+def pct_null():
+    null_pct = df.isna().sum()/df.shape[0]
+    print(null_pct)
+
+pct_null()
+
 # %%
 
-def count_nulls(df):
+df.describe().T    
 
-    
+# %%
