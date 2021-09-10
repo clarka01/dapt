@@ -29,6 +29,16 @@ from sklearn.pipeline import Pipeline
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+
+
+import sys
+import os
+
+sys.path.append(os.path.abspath(r"C:\Users\clark\Documents\LOCAL_REPOSITORY_LOCATION\libraries"))
+
+import sql_utils as su
+
+
 # %%
 
 def query_costar(query):
