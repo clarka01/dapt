@@ -1,0 +1,21 @@
+UNIX COMMANDS for Gitbash/powershell or other command lines:
+    Here's a good resource: http://www.mathcs.emory.edu/~valerie/courses/fall10/155/resources/unix_cheatsheet.html
+
+pwd - shows current folder, stands for (primary working directory)
+
+ls - lists files and folders in current directory
+
+cd folder_name - change directory; press 'tab' to autofill [sometimes this doesn't work]
+
+    cd folder_name/folder_name2 - drills down two folder levels
+
+    cd .. - go 'up' one level; cd ../.. goes 'up' two levels
+
+code file_name.py - opens file name
+
+mv old_folder new_folder - moves file from old 
+
+
+
+
+
