@@ -20,18 +20,31 @@
 '''
  
 # data processing
+import sys, os
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 import pyodbc 
-import psycopg2
+# import psycopg2
 
 
 # plotting
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+
+# set options: display
+
 pd.set_option('display.float_format', lambda x: '%.1f' % x)
+
+
+# repos (environment variables set)
+
+LOCAL_REPOSITORY_LOCATION = os.environ.get('LOCAL_REPOSITORY_LOCATION')
+
+os.chdir('../data_files')
+print(os.getcwdb())
+
 
 # date vars
 
@@ -46,6 +59,20 @@ monday = monday_dt.strftime('%Y-%m-%d')
 # start_day_of_prev_month = date.today().replace(day=1) - timedelta(days=last_day_of_prev_month.day)
 
 month = today_date.strftime("%B").upper()
+
+
+'''connect to aws server'''
+# import psycopg2
+
+# connection = psycopg2.connect(
+#     host = 'lease-data.cnzawwknyviz.us-east-1.rds.amazonaws.com',
+#     port = 5432,
+#     user = '',
+#     password = 'Costar12',
+#     database='costar'
+#     )
+# cursor=connection.cursor() 
+
 
 #%%
 
@@ -89,6 +116,33 @@ def merge_lease_geo():
     df.drop(columns = drop_cols, axis = 1, inplace=True)
 
     return df
+
+
+def merge_lease_aws():
+    pass
+
+
+#%%
+
+#%%
+
+def load_data():
+    
+    try:
+        df = merge_lease_geo()
+    except:
+        df = aws_merge_lease()
+        try:
+            df = pd.read_csv('df_ac.csv')
+        except:
+            print('Data not found')
+    return df
+
+df = load_data()
+
+
+
+#%%
 
 
 def format_types():
