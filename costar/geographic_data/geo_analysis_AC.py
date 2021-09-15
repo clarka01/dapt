@@ -1,8 +1,27 @@
 #%%
  
-# TODO: 
+''' TODO: 
+* seperate time periods and create histograms: 
+            2002-2007, 2008-2012, 2012 - 2021 (build timing into parameters)
+* stats for heirachal data (tableu?)
 
+* measures (some integer, some %/ratios): downtime, 
+            mkt rent, TIs, Free Mos, lease terms, Renewal Rate, Expenses
+
+* Vars = {Geo: [State, CSAID, Submarket, Zip]}, Building Class: range(5), vacancy, building_age} 
+
+* Stats: Mean, Median, Mode, Std. Dev., z-score, z-test;
+
+* vizuals: histograms, rolling change, 
+
+*** NOTES:
+**  property service types - link to expenses?
+**  
+'''
+ 
 #%%
+
+pd.set_option('display.float_format', lambda x: '%.1f' % x)
 
 # data processing
 import numpy as np
@@ -23,8 +42,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-#%%
-
 # date vars
 
 today_date = datetime.today() #with datetime
@@ -40,7 +57,6 @@ start_day_of_prev_month = date.today().replace(day=1) - timedelta(days=last_day_
 month = today_date.strftime("%B").upper()
 
 
-#%%
 
 def query_costar(query):
     ''' query from Costar Database'''
@@ -55,7 +71,6 @@ def query_costar(query):
 
     return  df
 
-#%%
 
 def merge_lease_geo():
     '''pull sql server tables into DFs and merge, drop cols'''
@@ -88,11 +103,9 @@ df = merge_lease_geo()
 
 df.shape
 
-
-
-
 #%%
 
+# PERCENT NULLS
 def pct_null():
     '''% of null values for pca analysis'''
     
@@ -101,5 +114,17 @@ def pct_null():
 
 lst = pct_null()
 
-df.head()
 # %%
+
+# CORRELATOIN MATRIX/PLOT (JUST FOR FUN)
+
+corr = df.corr()
+sns.heatmap(corr)
+
+#%%
+
+# DESCRIPTIVE STATS
+df.describe().T
+
+#%%
+
