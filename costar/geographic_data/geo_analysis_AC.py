@@ -25,7 +25,11 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 import pyodbc 
-# import psycopg2
+
+try:
+    import psycopg2
+except:
+    pass
 
 
 # plotting
@@ -61,20 +65,6 @@ monday = monday_dt.strftime('%Y-%m-%d')
 month = today_date.strftime("%B").upper()
 
 
-'''connect to aws server'''
-# import psycopg2
-
-# connection = psycopg2.connect(
-#     host = 'lease-data.cnzawwknyviz.us-east-1.rds.amazonaws.com',
-#     port = 5432,
-#     user = '',
-#     password = 'Costar12',
-#     database='costar'
-#     )
-# cursor=connection.cursor() 
-
-
-#%%
 
 def query_costar(query):
     ''' query from Costar Database'''
@@ -90,8 +80,9 @@ def query_costar(query):
     return  df
 
 
+#%%
 
-def merge_lease_geo():
+def merge_lease_sqlserv():
     '''pull sql server tables into DFs and merge, drop cols'''
 
     q1 = 'select * from dbo.merged_lease'
@@ -118,37 +109,49 @@ def merge_lease_geo():
     return df
 
 
-def merge_lease_aws():
-    pass
+# def merge_lease_aws():
+#   '''connect to aws server'''
 
+#     connection = psycopg2.connect(
+#         host = 'lease-data.cnzawwknyviz.us-east-1.rds.amazonaws.com',
+#         port = 5432,
+#         user = '',
+#         password = 'Costar12',
+#         database='costar'
+#         )
+#     cursor=connection.cursor()    
+     
 
-#%%
 
 #%%
 
 def load_data():
     
     try:
-        df = merge_lease_geo()
+        df = merge_lease_aws()
+
     except:
-        df = aws_merge_lease()
         try:
-            df = pd.read_csv('df_ac.csv')
+            df = merge_lease_sqlserv()
+
         except:
-            print('Data not found')
+            os.chdir(r'../data_files')
+            df = pd.read_csv('df_ac.csv')
+
+    else:
+        print('Data not found!')
+
     return df
 
 df = load_data()
-
-
 
 #%%
 
 
 def format_types():
-    '''format types for analysis/visuals'''
+    '''format types for analysis/visuals; object to int, float, date'''
     
-    df = merge_lease_geo()
+    df = load_data()
 
     df.fillna(0,inplace=True)
 
@@ -159,18 +162,15 @@ def format_types():
             'constructionyear', 'lease_start_year']
     
     df[to_int] = df[to_int].applymap(float)
-    
     df[to_int] = df[to_int].applymap(int)
 
 
     to_float = ['estimatedrent_y', 'rateactual', 'tenantimprovementallowancepersqft']
-
     df[to_float] = df[to_float].applymap(float) 
 
 
     to_date = ['dateonmarket', 'dateoffmarket', 'leasesigndate',
                 'leaseexpirationdate']
-
     df[to_date] = df[to_date].apply(pd.to_datetime, errors = 'coerce')
 
     return df
@@ -190,35 +190,33 @@ lst = pct_null()
 
 # %%
 
-'''CORRELATOIN MATRIX/PLOT (JUST FOR FUN)'''
-
+'''CORRELATION MATRIX/PLOT (JUST FOR FUN)'''
 corr = df.corr()
 sns.heatmap(corr)
-
-#%%
 
 '''DESCRIPTIVE STATISTICS'''
 df.describe().T
 
 #%%
-
 '''HISTOGRAMS.......................'''
 # TODO: fill 0 with null in columns of interest
+
+hist_size = (12,8)
 
 df.lease_start_year.hist(bins = 100, figsize = (12,8), range = [1980,2024])
 
 #%%
 
-df.building_age.hist(bins = 300, figsize = (12,8), range = [0,250])
+df.building_age.hist(bins = 300, figsize = hist_size, range = [0,250])
 
 #%%
 
-df.constructionyear.hist(bins = 100, figsize = (12,8), range = [1700,2024])
+df.constructionyear.hist(bins = 100, figsize = hist_size, range = [1700,2024])
+#%%
+max_estrent = df.estimatedrent_y.max() + 1
 
-
-# %%
-
-df.estimatedrent_y.hist(bins = 100)
+#%%
+df.estimatedrent_y.hist(bins = 100, range = [0,max_estrent], figsize = hist_size, log = True)
 
 #%%
 
