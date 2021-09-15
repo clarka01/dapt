@@ -31,12 +31,12 @@ import seaborn as sns
 
 
 
-import sys
-import os
+# import sys
+# import os
 
-sys.path.append(os.path.abspath(r"C:\Users\clark\Documents\LOCAL_REPOSITORY_LOCATION\libraries"))
+# sys.path.append(os.path.abspath(r"C:\Users\clark\Documents\LOCAL_REPOSITORY_LOCATION\libraries"))
 
-import sql_utils as su
+#import sql_utils as su
 
 
 # %%

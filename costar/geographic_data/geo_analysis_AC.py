@@ -29,14 +29,6 @@ import pandas as pd
 from datetime import datetime, timedelta
 import pyodbc 
 
-# modeling
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import roc_curve, roc_auc_score
-from sklearn.decomposition import PCA
-from sklearn.pipeline import Pipeline
-
 # plotting
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -99,15 +91,44 @@ def merge_lease_geo():
     return df
 
 
-df = merge_lease_geo()
+def format_types():
+    '''format types for analysis/visuals'''
+    
+    df = merge_lease_geo()
 
-df.shape
+    df.fillna(0,inplace=True)
 
+    #%%
+
+    to_int = ['leasedealid', 'propertyid', 'propertytypeid', 
+            'locationoccupancyid', 'servicetypeid', 'sqftmin', 
+            'sqftmax', 'renewal', 'actualvacancy', 'rba', 'leaseterminmonths',
+            'freemonths', 'cbsaid', 'buildingratingid', 'building_age',
+            'constructionyear', 'lease_start_year']
+    
+    df[to_int] = df[to_int].applymap(float)
+    
+    df[to_int] = df[to_int].applymap(int)
+
+
+    to_float = ['estimatedrent_y', 'rateactual', 'tenantimprovementallowancepersqft']
+
+    df[to_float] = df[to_float].applymap(float) 
+
+
+    to_date = ['dateonmarket', 'dateoffmarket', 'leasesigndate',
+                'leaseexpirationdate']
+
+    df[to_date] = df[to_date].apply(pd.to_datetime, errors = 'coerce')
+
+    return df
+
+df = format_types()
 #%%
 
 # PERCENT NULLS
 def pct_null():
-    '''% of null values for pca analysis'''
+    '''% of null values for pca analysis/general needs'''
     
     null_pct = df.isna().sum()/df.shape[0]
     print(null_pct)
@@ -116,15 +137,35 @@ lst = pct_null()
 
 # %%
 
-# CORRELATOIN MATRIX/PLOT (JUST FOR FUN)
+'''CORRELATOIN MATRIX/PLOT (JUST FOR FUN)'''
 
 corr = df.corr()
 sns.heatmap(corr)
 
 #%%
 
-# DESCRIPTIVE STATS
+'''DESCRIPTIVE STATISTICS'''
 df.describe().T
+
+#%%
+
+'''HISTOGRAMS.......................'''
+# TODO: fill 0 with null in columns of interest
+
+df.lease_start_year.hist(bins = 100, figsize = (12,8), range = [1980,2024])
+
+#%%
+
+df.building_age.hist(bins = 300, figsize = (12,8), range = [0,250])
+
+#%%
+
+df.constructionyear.hist(bins = 100, figsize = (12,8), range = [1700,2024])
+
+
+# %%
+
+df.estimatedrent_y.hist(bins = 100)
 
 #%%
 
