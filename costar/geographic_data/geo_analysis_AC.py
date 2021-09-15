@@ -19,20 +19,19 @@
 **  
 '''
  
-#%%
-
-pd.set_option('display.float_format', lambda x: '%.1f' % x)
-
 # data processing
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 import pyodbc 
+import psycopg2
+
 
 # plotting
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+pd.set_option('display.float_format', lambda x: '%.1f' % x)
 
 # date vars
 
@@ -43,12 +42,12 @@ monday_dt = now - timedelta(days = now.weekday())
 monday = monday_dt.strftime('%Y-%m-%d')
 # first_day_month = today_date.replace(day=1)
 # first_day_current_month = first_day_month.date().strftime('%Y-%m-%d')
-last_day_of_prev_month = date.today().replace(day=1) - timedelta(days=1)
-start_day_of_prev_month = date.today().replace(day=1) - timedelta(days=last_day_of_prev_month.day)
+# last_day_of_prev_month = date.today().replace(day=1) - timedelta(days=1)
+# start_day_of_prev_month = date.today().replace(day=1) - timedelta(days=last_day_of_prev_month.day)
 
 month = today_date.strftime("%B").upper()
 
-
+#%%
 
 def query_costar(query):
     ''' query from Costar Database'''
@@ -62,6 +61,7 @@ def query_costar(query):
     df = pd.read_sql_query(query, conn)
 
     return  df
+
 
 
 def merge_lease_geo():
@@ -98,8 +98,6 @@ def format_types():
 
     df.fillna(0,inplace=True)
 
-    #%%
-
     to_int = ['leasedealid', 'propertyid', 'propertytypeid', 
             'locationoccupancyid', 'servicetypeid', 'sqftmin', 
             'sqftmax', 'renewal', 'actualvacancy', 'rba', 'leaseterminmonths',
@@ -124,6 +122,7 @@ def format_types():
     return df
 
 df = format_types()
+
 #%%
 
 # PERCENT NULLS
@@ -168,4 +167,6 @@ df.constructionyear.hist(bins = 100, figsize = (12,8), range = [1700,2024])
 df.estimatedrent_y.hist(bins = 100)
 
 #%%
+
+
 
