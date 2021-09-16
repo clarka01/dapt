@@ -3,3 +3,4 @@
 #individual files
 df_ac.csv
 *.xlsx
+*.vscode
