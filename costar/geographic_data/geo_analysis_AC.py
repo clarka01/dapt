@@ -139,14 +139,10 @@ def load_data():
     
     try:
         df = merge_lease_aws()
-
     except: 
         df = merge_lease_sqlserv()
 
     return df
-
-df = load_data()
-df.shape
 
 #%%
 
@@ -158,23 +154,29 @@ def format_types():
 
     df.fillna(0,inplace=True)
 
-    to_int = ['leasedealid', 'propertyid', 'propertytypeid', 
-            'locationoccupancyid', 'servicetypeid', 'sqftmin', 
-            'sqftmax', 'renewal', 'actualvacancy', 'rba', 'leaseterminmonths',
-            'freemonths', 'cbsaid', 'buildingratingid', 'building_age',
-            'constructionyear', 'lease_start_year']
+    to_int = ['leasedeal_id', 'property_id', 'property_type_id', 
+            'location_occupancy_id', 'service_type_id', 'sqft_min', 
+            'sqft_max', 'renewal', 'actual_vacancy', 'rba', 'lease_term_inmonths',
+            'free_months', 'cbsaid', 'buildingrating_id', 
+            'construction_year', 'zip', 'days_on_market'] 
+            #'building_age', #'lease_start_year'
     
     df[to_int] = df[to_int].applymap(float)
     df[to_int] = df[to_int].applymap(int)
 
 
-    to_float = ['estimatedrent_y', 'rateactual', 'tenantimprovementallowancepersqft']
+    to_float = ['estimated_rent', 'rate_actual', 'tenantimprovementallowancepersqft']
     df[to_float] = df[to_float].applymap(float) 
 
 
-    to_date = ['dateonmarket', 'dateoffmarket', 'leasesigndate',
-                'leaseexpirationdate']
+    to_date = ['date_on_market', 'date_off_market', 'lease_sign_date',
+                'lease_expiration_date']
     df[to_date] = df[to_date].apply(pd.to_datetime, errors = 'coerce')
+
+    # add col, lease_start year
+    df['lease_start_year'] = pd.DatetimeIndex(df['from_date']).year
+    # add col building_age
+    df['building_age'] = datetime.today().year - df['construction_year']
 
     return df
 
