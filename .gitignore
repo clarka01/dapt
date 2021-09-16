@@ -2,4 +2,4 @@
 
 #individual files
 df_ac.csv
-columns_aws_sqlserver.xlsx
+*.xlsx

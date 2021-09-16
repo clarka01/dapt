@@ -1,7 +1,8 @@
 #%%
  
 ''' TODO: 
-* seperate time periods and create histograms: 
+* column dtypes...historgrams...
+*seperate time periods and create histograms: 
             2002-2007, 2008-2012, 2012 - 2021 (build timing into parameters)
 * stats for heirachal data (tableu?)
 
@@ -92,7 +93,7 @@ def merge_lease_sqlserv():
     df2 = query_costar(q2)
 
     df = pd.merge(df1, df2, 
-                        how = 'inner', 
+                        how = 'left', 
                         left_on = 'leasedealid',
                         right_on = 'LeaseDealID')
 
@@ -108,20 +109,29 @@ def merge_lease_sqlserv():
 
     return df
 
+#%%
 
-# def merge_lease_aws():
+def merge_lease_aws():
 #   '''connect to aws server'''
 
-#     connection = psycopg2.connect(
-#         host = 'lease-data.cnzawwknyviz.us-east-1.rds.amazonaws.com',
-#         port = 5432,
-#         user = '',
-#         password = 'Costar12',
-#         database='costar'
-#         )
-#     cursor=connection.cursor()    
-     
+    import psycopg2
 
+    connection = psycopg2.connect(
+        host = 'lease-data.cnzawwknyviz.us-east-1.rds.amazonaws.com',
+        port = 5432,
+        user = 'costar',
+        password = 'Costar12',
+        database='costar'
+        )
+    cursor=connection.cursor()    
+
+    df = pd.read_sql(
+    '''
+    SELECT *
+    FROM lease_merged_sep
+    ''', con=connection)
+    
+    return df
 
 #%%
 
@@ -130,20 +140,13 @@ def load_data():
     try:
         df = merge_lease_aws()
 
-    except:
-        try:
-            df = merge_lease_sqlserv()
-
-        except:
-            os.chdir(r'../data_files')
-            df = pd.read_csv('df_ac.csv')
-
-    else:
-        print('Data not found!')
+    except: 
+        df = merge_lease_sqlserv()
 
     return df
 
 df = load_data()
+df.shape
 
 #%%
 
@@ -201,6 +204,16 @@ df.describe().T
 '''HISTOGRAMS.......................'''
 # TODO: fill 0 with null in columns of interest
 
+
+#%%
+
+fig, axes = plt.subplots(nrows = 5, ncols = 2)
+
+for i, col in enumerate(df.columns):
+    print(i, col)
+
+#%%
+
 hist_size = (12,8)
 
 df.lease_start_year.hist(bins = 100, figsize = (12,8), range = [1980,2024])
@@ -211,7 +224,10 @@ df.building_age.hist(bins = 300, figsize = hist_size, range = [0,250])
 
 #%%
 
-df.constructionyear.hist(bins = 100, figsize = hist_size, range = [1700,2024])
+df.constructionyear.min()
+#%%
+
+df.constructionyear.hist(bins = 100, figsize = hist_size, range = [1900,2024])
 #%%
 max_estrent = df.estimatedrent_y.max() + 1
 
