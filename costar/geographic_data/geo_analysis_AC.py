@@ -2,6 +2,8 @@
  
 ''' TODO: 
 * column dtypes...historgrams...
+** eliminate outliers...
+
 *seperate time periods and create histograms: 
             2002-2007, 2008-2012, 2012 - 2021 (build timing into parameters)
 * stats for heirachal data (tableu?)
@@ -81,8 +83,6 @@ def query_costar(query):
     return  df
 
 
-#%%
-
 def merge_lease_sqlserv():
     '''pull sql server tables into DFs and merge, drop cols'''
 
@@ -109,8 +109,6 @@ def merge_lease_sqlserv():
 
     return df
 
-#%%
-
 def merge_lease_aws():
 #   '''connect to aws server'''
 
@@ -133,7 +131,6 @@ def merge_lease_aws():
     
     return df
 
-#%%
 
 def load_data():
     
@@ -143,8 +140,6 @@ def load_data():
         df = merge_lease_sqlserv()
 
     return df
-
-#%%
 
 
 def format_types():
@@ -182,7 +177,7 @@ def format_types():
 
 df = format_types()
 
-#%%
+
 
 # PERCENT NULLS
 def pct_null():
@@ -191,38 +186,45 @@ def pct_null():
     null_pct = df.isna().sum()/df.shape[0]
     print(null_pct)
 
-lst = pct_null()
 
-# %%
+# '''CORRELATION MATRIX/PLOT (JUST FOR FUN)'''
+# corr = df.corr()
+# sns.heatmap(corr)
 
-'''CORRELATION MATRIX/PLOT (JUST FOR FUN)'''
-corr = df.corr()
-sns.heatmap(corr)
-
-'''DESCRIPTIVE STATISTICS'''
-df.describe().T
+# '''DESCRIPTIVE STATISTICS'''
+# df.describe().T
 
 #%%
 '''HISTOGRAMS.......................'''
 # TODO: fill 0 with null in columns of interest
 
+cols = ['lease_term_inmonths','free_months', 
+            'buildingrating_id', 'sqft_min', 'sqft_max', 
+            'construction_year', 'days_on_market', 
+            'lease_start_year', 'building_age', 'lease_expiration_date']
+
+df_hist = df[cols]
+
+num_cols = df.columns[:]
 
 #%%
 
-fig, axes = plt.subplots(nrows = 5, ncols = 2)
+fig, axes = plt.subplots(nrows = 5, ncols = 2, figsize = (12, 8))
+fig.tight_layout()
 
-for i, col in enumerate(df.columns):
-    print(i, col)
+for i, ax in enumerate(axes.flat):
+    col = num_cols[i]
+    df_hist.hist(bins = 100, ax=ax)
+    ax.set_xlabel(col, weight = 'bold', size = 10)
 
-#%%
-
-hist_size = (12,8)
-
-df.lease_start_year.hist(bins = 100, figsize = (12,8), range = [1980,2024])
 
 #%%
 
-df.building_age.hist(bins = 300, figsize = hist_size, range = [0,250])
+df.lease_start_year.hist(bins = 100, figsize = (12,8))
+
+#%%
+
+df.building_age.hist(bins = 300, range = [0,250])
 
 #%%
 
