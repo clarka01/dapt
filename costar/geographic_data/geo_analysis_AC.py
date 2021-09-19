@@ -58,15 +58,7 @@ print(os.getcwdb())
 today_date = datetime.today() #with datetime
 today = datetime.today().strftime('%Y-%m-%d') #y/m/d only
 now = datetime.now()
-monday_dt = now - timedelta(days = now.weekday()) 
-monday = monday_dt.strftime('%Y-%m-%d')
-# first_day_month = today_date.replace(day=1)
-# first_day_current_month = first_day_month.date().strftime('%Y-%m-%d')
-# last_day_of_prev_month = date.today().replace(day=1) - timedelta(days=1)
-# start_day_of_prev_month = date.today().replace(day=1) - timedelta(days=last_day_of_prev_month.day)
-
 month = today_date.strftime("%B").upper()
-
 
 
 def query_costar(query):
@@ -88,24 +80,6 @@ def merge_lease_sqlserv():
 
     q1 = 'select * from dbo.merged_lease'
     df1 = query_costar(q1)
-
-    q2 = 'select * from dbo.submarket_geo'
-    df2 = query_costar(q2)
-
-    df = pd.merge(df1, df2, 
-                        how = 'left', 
-                        left_on = 'leasedealid',
-                        right_on = 'LeaseDealID')
-
-    drop_cols = ['estimatedrent_x']
-
-    #extract year from lease 'fromdate'
-    df['lease_start_year'] = pd.DatetimeIndex(df['fromdate']).year
-
-    #calculate building age (years) from 'constructionyear'
-    df['building_age'] = datetime.today().year - df['constructionyear']
-
-    df.drop(columns = drop_cols, axis = 1, inplace=True)
 
     return df
 
@@ -141,27 +115,29 @@ def load_data():
 
     return df
 
+#%%
 
 def format_types():
     '''format types for analysis/visuals; object to int, float, date'''
     
     df = load_data()
 
-    df.fillna(0,inplace=True)
+    #df.fillna('',inplace=True)
 
-    to_int = ['leasedeal_id', 'property_id', 'property_type_id', 
+    to_float1 = ['leasedeal_id', 'property_id', 'property_type_id', 
             'location_occupancy_id', 'service_type_id', 'sqft_min', 
             'sqft_max', 'renewal', 'actual_vacancy', 'rba', 'lease_term_inmonths',
             'free_months', 'cbsaid', 'buildingrating_id', 
             'construction_year', 'zip', 'days_on_market'] 
             #'building_age', #'lease_start_year'
     
-    df[to_int] = df[to_int].applymap(float)
-    df[to_int] = df[to_int].applymap(int)
+    df[to_float1] = df[to_float1].applymap(float)
+    # df[to_int] = df[to_int].applymap(int)
+    '''see https://pandas.pydata.org/pandas-docs/stable/user_guide/gotchas.html#support-for-integer-na'''
 
 
-    to_float = ['estimated_rent', 'rate_actual', 'tenantimprovementallowancepersqft']
-    df[to_float] = df[to_float].applymap(float) 
+    to_float2 = ['estimated_rent', 'rate_actual', 'tenantimprovementallowancepersqft']
+    df[to_float2] = df[to_float2].applymap(float) 
 
 
     to_date = ['date_on_market', 'date_off_market', 'lease_sign_date',
@@ -178,14 +154,12 @@ def format_types():
 df = format_types()
 
 
-
 # PERCENT NULLS
 def pct_null():
     '''% of null values for pca analysis/general needs'''
     
-    null_pct = df.isna().sum()/df.shape[0]
+    null_pct = df.isna().sum()/df.shape[0] * 100
     print(null_pct)
-
 
 # '''CORRELATION MATRIX/PLOT (JUST FOR FUN)'''
 # corr = df.corr()
@@ -196,7 +170,6 @@ def pct_null():
 
 #%%
 '''HISTOGRAMS.......................'''
-# TODO: fill 0 with null in columns of interest
 
 cols = ['lease_term_inmonths','free_months', 
             'buildingrating_id', 'sqft_min', 'sqft_max', 
@@ -204,6 +177,10 @@ cols = ['lease_term_inmonths','free_months',
             'lease_start_year', 'building_age', 'lease_expiration_date']
 
 df_hist = df[cols]
+
+df_hist.describe().T
+
+#%%
 
 num_cols = df.columns[:]
 
