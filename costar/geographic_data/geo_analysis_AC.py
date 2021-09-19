@@ -2,7 +2,7 @@
  
 ''' TODO: 
 * column dtypes...historgrams...
-** eliminate outliers...
+** eliminate outliers...? 
 
 *seperate time periods and create histograms: 
             2002-2007, 2008-2012, 2012 - 2021 (build timing into parameters)
@@ -161,28 +161,49 @@ def pct_null():
     null_pct = df.isna().sum()/df.shape[0] * 100
     print(null_pct)
 
-# '''CORRELATION MATRIX/PLOT (JUST FOR FUN)'''
-# corr = df.corr()
-# sns.heatmap(corr)
-
-# '''DESCRIPTIVE STATISTICS'''
-# df.describe().T
 
 #%%
-'''HISTOGRAMS.......................'''
 
-cols = ['lease_term_inmonths','free_months', 
+'''DESCRIPTIVE STATS..................................'''
+
+# narrow columns to variables of interest
+num_cols = ['lease_term_inmonths','free_months', 
             'buildingrating_id', 'sqft_min', 'sqft_max', 
             'construction_year', 'days_on_market', 
             'lease_start_year', 'building_age', 'lease_expiration_date']
 
-df_hist = df[cols]
+df_main = df[num_cols]
 
-df_hist.describe().T
+# produce stats for outlier detection
+pcts = [.001,.01, .025, .25, .5, .75, .975, .99, .999]
+df_desc = df_main.describe(percentiles= pcts).T
+
+# df_desc.to_csv('data_set_stats.csv')
+
 
 #%%
 
-num_cols = df.columns[:]
+
+'''HISTOGRAMS FOR KEY DATA & FEATURE ENGINEERING.............'''
+
+
+''' lease_term_in_months'''
+
+# remove anything <= 0
+df =  df.loc[~(df.lease_term_inmonths <= 0)]
+
+# histogram
+max_term = df.lease_term_inmonths.max()
+df.lease_term_inmonths.hist(bins = 100, 
+                            figsize = (12, 8), 
+                            color = 'green', 
+                            range= (0,max_term), 
+                            log = True) 
+
+
+#%%
+
+df_lease_term_neg.shape
 
 #%%
 
