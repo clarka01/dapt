@@ -2,7 +2,8 @@
  
 ''' TODO: 
 * column dtypes...historgrams...
-** eliminate outliers...? 
+** FEATURE ENGINEERING
+    *remove submarket == null 
 
 *seperate time periods and create histograms: 
             2002-2007, 2008-2012, 2012 - 2021 (build timing into parameters)
@@ -186,11 +187,19 @@ df_desc = df_main.describe(percentiles= pcts).T
 
 '''HISTOGRAMS FOR KEY DATA & FEATURE ENGINEERING.............'''
 
+'''General Cleaning...'''
+
+# remove submarkets without meaning
+
+df.dropna(subset = ['submarket_name']) #1,067,141 to 900,083
+
+#%%
 
 ''' lease_term_in_months'''
 
-# remove anything <= 0
-df =  df.loc[~(df.lease_term_inmonths <= 0)]
+# remove anything <= 0; 
+        # create new data set, or eliminate these from entire set????
+df =  df.loc[~(df.lease_term_inmonths <= 0)] #900,083 to #893,993
 
 # histogram
 max_term = df.lease_term_inmonths.max()
@@ -199,23 +208,6 @@ df.lease_term_inmonths.hist(bins = 100,
                             color = 'green', 
                             range= (0,max_term), 
                             log = True) 
-
-
-#%%
-
-df_lease_term_neg.shape
-
-#%%
-
-fig, axes = plt.subplots(nrows = 5, ncols = 2, figsize = (12, 8))
-fig.tight_layout()
-
-for i, ax in enumerate(axes.flat):
-    col = num_cols[i]
-    df_hist.hist(bins = 100, ax=ax)
-    ax.set_xlabel(col, weight = 'bold', size = 10)
-
-
 #%%
 
 df.lease_start_year.hist(bins = 100, figsize = (12,8))
