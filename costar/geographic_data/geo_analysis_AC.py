@@ -130,32 +130,27 @@ def load_data():
 
             return df
 
-        df = merge_lease_aws()
+        df = format_types()
 
     return df
 
 
-
-''' FUNCTION TO DATAFRAME......................'''
-
 def  csv_file_write():
-    '''writes to df (remember to adjust .gitignore to ignore this file) '''
+    '''writes to df (remember to .gitignore this file since it's saving in the local repo) '''
 
     df = load_data()
     
-    df.to_csv('df_aws_merged.csv')
+    df.to_csv('df_aws_merged.csv', index = False)
 
 
-#%%
 
 '''DESCRIPTIVE STATS..................................'''
 
-
-PERCENT NULLS
+# PERCENT NULLS
 def pct_null():
     '''% of null values for pca analysis/general needs'''
     
-    null_pct = df.isna().sum()/df.shape[0] * 100
+    null_pct = df_main.isna().sum()/df_main.shape[0] * 100
     print(null_pct)
 
 
@@ -163,76 +158,113 @@ def pct_null():
 
 def desc_stats():
 
+    '''reduces columns for describe() function; writes to csv (must .gitignore)'''
+
     num_cols = ['lease_term_inmonths','free_months', 
                 'buildingrating_id', 'sqft_min', 'sqft_max', 
                 'construction_year', 'days_on_market', 
                 'lease_start_year', 'building_age', 'lease_expiration_date']
 
-    df_main = df[num_cols]
+    df_desc = df_main[num_cols]
 
     # produce stats for outlier detection
     pcts = [.001,.01, .025, .25, .5, .75, .975, .99, .999]
     df_desc = df_main.describe(percentiles= pcts).T
 
+    df_desc.to_csv('data_set_stats.csv', index = False)
+
     return df_desc
 
-# df_desc.to_csv('data_set_stats.csv')
+
+'''POPULATE DATA FRAME AND OVERRWRITE PREVIOUS CSV PREIOUS FILE'''
+if __name__ == '__main__':
+    df_main = load_data()
+    csv_file_write()
+    pct_null()
+    desc_stats()
+
 
 
 #%%
+
 
 
 '''HISTOGRAMS FOR KEY DATA COLUMNS & FEATURE ENGINEERING.............'''
 
-'''General Cleaning...'''
 
 
-
-#%%
-
-''' lease_term_in_months'''
+def lease_term_hist():
+    ''' lease_term_in_months'''
 
 # remove anything <= 0; 
-        # create new data set, or eliminate these from entire set????
-df =  df.loc[~(df.lease_term_inmonths <= 0)] #900,083 to #893,993
+    # create new data set, or eliminate these from entire set????
+    df =  df_main.loc[~(df_main.lease_term_inmonths <= 0)] #900,083 to #893,993
 
-# histogram
-min_term = df.lease_term_inmonths.min()
-max_term = df.lease_term_inmonths.max()
-
-
-df.lease_term_inmonths.hist(bins = 100, 
-                            figsize = (12, 8), 
-                            color = 'green', 
-                            range= (0,max_term), 
-                            log = True) 
-#%%
-
-yr_min = df.lease_start_year.min()
-yr_max = df.lease_start_year.max()
+    # histogram
+    min_term = df.lease_term_inmonths.min()
+    max_term = df.lease_term_inmonths.max()
 
 
-# for i, yr in enumerate(df.lease_start_year.unique()):
-#     print(i, yr)
+    df.lease_term_inmonths.hist(bins = 100, 
+                                figsize = (12, 8), 
+                                color = 'green', 
+                                range= (0,max_term), 
+                                log = True) 
 
-df.lease_start_year.hist(bins = 120, figsize = (12,8), range = (1980, yr_max))
+lease_term_hist() #FUNCTION CALL
 
 
 #%%
 
-df.building_age.hist(bins = 300, range = [0,250])
+def lease_start_hist():
+    ''' lease_start_year histogram'''
+
+
+    df = df_main
+
+    yr_min = df.lease_start_year.min()
+    yr_max = df.lease_start_year.max()
+
+
+    # for i, yr in enumerate(df.lease_start_year.unique()):
+    #     print(i, yr)
+
+    df.lease_start_year.hist(bins = 100, figsize = (12,8), range = (yr_min, yr_max))
+
+    print(df.lease_start_year.value_counts().max())
+
+lease_start_hist() #FUNCTION CALL
+
 
 #%%
 
-df.constructionyear.min()
+def building_age_hist():
+    '''building age histogram'''
+    df = df_main
+
+    df.building_age.hist(bins = 300, range = [0,250])
+
+    #5 buildings in construction as of 2021
+    print(df.building_age.loc[(df.building_age < 0)].value_counts()) 
+
+building_age_hist()
+
+
+
 #%%
 
-df.constructionyear.hist(bins = 100, figsize = hist_size, range = [1900,2024])
-#%%
-max_estrent = df.estimatedrent_y.max() + 1
+def rent_est_actual():
+    '''rent actual vs rent estimated (ratio) histogram'''
+    df = df_main
 
-#%%
-df.estimatedrent_y.hist(bins = 100, range = [0,max_estrent], figsize = hist_size, log = True)
+    df['rent_diff'] = df.rate_actual / df.estimated_rent
+
+    df.rent_diff.hist(bins = 100, 
+                     figsize = (12, 8), 
+                     #log = True
+                     range = (0,1))
+
+rent_est_actual()
 
 #%%
 
