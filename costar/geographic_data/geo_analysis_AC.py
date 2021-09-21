@@ -132,6 +132,9 @@ def load_data():
 
         df = format_types()
 
+    df.rename(columns = {'tenantimprovementallowancepersqft':'ti'}, inplace = True)
+
+
     return df
 
 
@@ -175,6 +178,15 @@ def desc_stats():
 
     return df_desc
 
+def desc_stat_col(col_name):
+    '''quick function to see column stats '''
+
+    pcts = [.001,.01, .025, .25, .5, .75, .975, .99, .999]
+
+    df = df_main[col_name]
+
+    print(df.describe(percentiles = pcts).T)
+
 
 '''POPULATE DATA FRAME AND OVERRWRITE PREVIOUS CSV PREIOUS FILE'''
 if __name__ == '__main__':
@@ -187,14 +199,106 @@ if __name__ == '__main__':
 
 #%%
 
-
-
 '''HISTOGRAMS FOR KEY DATA COLUMNS & FEATURE ENGINEERING.............'''
 
 
+#%%
+
+def downtime_hist():
+    '''downtime per leasedeal_id'''
+
+    desc_stat_col('days_on_market')
+
+    df = df_main
+
+    pct = [.99]
+    pct_99 = df.days_on_market.describe(percentiles = pct).loc['99%']
+    min_down = df.days_on_market.min()
+
+
+    df.days_on_market.hist(bins = 100, range = (min_down, pct_99))
+    print()
+
+downtime_hist()
+
+
+
+#%%
+
+def market_rent_hist():
+    '''rent actual vs rent estimated (ratio) histogram'''
+
+    desc_stat_col('estimated_rent')
+    desc_stat_col('rate_actual')
+
+
+    df = df_main
+
+    df['rent_diff'] = df.rate_actual / df.estimated_rent
+
+    df.rent_diff.hist(bins = 100, 
+                     figsize = (12, 8), 
+                     #log = True
+                     range = (0,1))
+
+market_rent_hist() #FUNCTION CALL
+
+
+
+# %%
+
+def tenant_improve_hist():
+    '''tenant_allowance histogram'''
+
+    print('PRE-OUTLIER REMOVAL')
+    desc_stat_col('ti')
+
+    df = df_main[(df_main.ti > 0)]
+
+
+    #use 99% for range max/min of 1
+    print('POST OUTLIER REMOVAL')
+    df.ti.hist(bins = 100, range = (1, 100))
+
+tenant_improve_hist()
+
+
+#%%
+
+def free_months_hist(): #would be worth correlating this with 
+
+    '''free_months per leasedeal_id'''
+
+    desc_stat_col('free_months')
+
+    #remove '0's from free_months column
+    df = df_main[(df_main.free_months > 0)]
+    
+    #use 99% for range max/min of 1
+    pct = [.99]
+    pct_99 = df.free_months.describe(percentiles = pct).loc['99%']
+    min_free = df.free_months.min()
+
+    # number of bins
+    bin = (pct_99 - min_free).astype(np.int32)
+
+    # % of leasedeal_ids w/ free months
+    print(df.free_months.count() / df.shape[0])
+
+    df.free_months.hist(bins = bin, range = (min_free, pct_99))
+
+free_months_hist() #FUNCTION CALL
+
+
+
+#%%
 
 def lease_term_hist():
     ''' lease_term_in_months'''
+
+    print('PRE-OUTLIER REMOVAL:')
+    desc_stat_col('lease_term_inmonths')
+
 
 # remove anything <= 0; 
     # create new data set, or eliminate these from entire set????
@@ -204,14 +308,31 @@ def lease_term_hist():
     min_term = df.lease_term_inmonths.min()
     max_term = df.lease_term_inmonths.max()
 
+    pct = [.99]
+    pct_99 = df.lease_term_inmonths.describe(percentiles = pct).loc['99%']
+    min_lease = df.lease_term_inmonths.min()
+
+    print('POST-OUTLIER REMOVAL:')
 
     df.lease_term_inmonths.hist(bins = 100, 
                                 figsize = (12, 8), 
                                 color = 'green', 
-                                range= (0,max_term), 
-                                log = True) 
+                                range= (min_lease, pct_99), 
+                                # log = True
+                                ) 
 
 lease_term_hist() #FUNCTION CALL
+
+
+
+#%%
+
+
+
+
+
+
+
 
 
 #%%
@@ -219,6 +340,7 @@ lease_term_hist() #FUNCTION CALL
 def lease_start_hist():
     ''' lease_start_year histogram'''
 
+    desc_stat_col('lease_start_year')
 
     df = df_main
 
@@ -240,6 +362,10 @@ lease_start_hist() #FUNCTION CALL
 
 def building_age_hist():
     '''building age histogram'''
+
+    desc_stat_col('building_age')
+
+
     df = df_main
 
     df.building_age.hist(bins = 300, range = [0,250])
@@ -251,22 +377,6 @@ building_age_hist()
 
 
 
-#%%
-
-def rent_est_actual():
-    '''rent actual vs rent estimated (ratio) histogram'''
-    df = df_main
-
-    df['rent_diff'] = df.rate_actual / df.estimated_rent
-
-    df.rent_diff.hist(bins = 100, 
-                     figsize = (12, 8), 
-                     #log = True
-                     range = (0,1))
-
-rent_est_actual()
-
-#%%
 
 
 
