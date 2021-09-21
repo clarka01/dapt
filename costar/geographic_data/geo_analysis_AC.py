@@ -210,7 +210,15 @@ df.lease_term_inmonths.hist(bins = 100,
                             log = True) 
 #%%
 
-df.lease_start_year.hist(bins = 100, figsize = (12,8))
+yr_min = df.lease_start_year.min()
+yr_max = df.lease_start_year.max()
+
+
+# for i, yr in enumerate(df.lease_start_year.unique()):
+#     print(i, yr)
+
+df.lease_start_year.hist(bins = 120, figsize = (12,8), range = (1980, yr_max))
+
 
 #%%
 
