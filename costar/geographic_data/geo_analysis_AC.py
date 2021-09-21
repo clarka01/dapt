@@ -340,8 +340,20 @@ lease_term_hist() #FUNCTION CALL
 
 #%%
 
+def service_type():
+    '''service type value_counts'''
+    df = df_main
 
-###### EXPENSES
+    df1 = df.service_type_id.value_counts() / df.shape[0]
+
+    # pct_service_id = "{:.2%}".format(df1)
+
+
+    return df1
+
+service_type()
+
+#%%
 
 
 ###### RENEWAL RATES
@@ -367,6 +379,10 @@ renewal_hist()
 
 #%%
 
+'''OTHER VARIABLES AND CALCULATIONS.....................'''
+
+
+
 def lease_start_hist():
     ''' lease_start_year histogram'''
 
@@ -386,6 +402,8 @@ def lease_start_hist():
     print(df.lease_start_year.value_counts().max())
 
 lease_start_hist() #FUNCTION CALL
+
+
 
 
 #%%
