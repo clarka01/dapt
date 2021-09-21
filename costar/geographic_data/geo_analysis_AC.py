@@ -87,7 +87,8 @@ def merge_lease_aws():
 
 def load_data():
     '''tries to read previous csv file to save pull time
-        otherwise, pulls from aws server'''
+        otherwise, pulls from aws server;
+        ***REMOVES submarkets nulls'''
 
     try:   
         df = pd.read_csv('df_aws_merged.csv')
@@ -131,9 +132,6 @@ def load_data():
             return df
 
         df = format_types()
-
-    df.rename(columns = {'tenantimprovementallowancepersqft':'ti'}, inplace = True)
-
 
     return df
 
@@ -194,6 +192,13 @@ if __name__ == '__main__':
     csv_file_write()
     pct_null()
     desc_stats()
+    
+
+'''MODIFY VARIABLES'''
+
+df_main['rent_diff'] = df_main.rate_actual / df_main.estimated_rent
+df_main.rename(columns = {'tenantimprovementallowancepersqft':'ti'}, inplace = True)
+
 
 
 
@@ -253,12 +258,20 @@ def tenant_improve_hist():
     print('PRE-OUTLIER REMOVAL')
     desc_stat_col('ti')
 
-    df = df_main[(df_main.ti > 0)]
+    df = df_main
+    df['ti_pct'] = df.ti / (df.rate_actual/df.sqft_min)
 
+    df = df[(df.ti_pct > 0)]
+
+
+    print('POST-OUTLIER REMOVAL')
+    print(df.ti_pct.describe())
 
     #use 99% for range max/min of 1
     print('POST OUTLIER REMOVAL')
-    df.ti.hist(bins = 100, range = (1, 100))
+    df.ti_pct.hist(bins = 100, 
+                    # range = (0,1)
+                    )
 
 tenant_improve_hist()
 
@@ -328,9 +341,26 @@ lease_term_hist() #FUNCTION CALL
 #%%
 
 
+###### EXPENSES
 
 
+###### RENEWAL RATES
 
+def renewal_hist():
+
+    '''renewal rate histogram'''
+
+    df = df_main
+
+    renewals = df.renewal[(df.renewal == 1)].count()
+
+    pct_renewals = renewals / df.shape[0]
+
+    pct_renewed = "{:.2%}".format(pct_renewals)
+
+    return pct_renewed
+
+renewal_hist()
 
 
 
