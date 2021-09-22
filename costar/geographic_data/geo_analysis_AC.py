@@ -199,7 +199,13 @@ if __name__ == '__main__':
 df_main['rent_diff'] = df_main.rate_actual / df_main.estimated_rent
 df_main.rename(columns = {'tenantimprovementallowancepersqft':'ti'}, inplace = True)
 
+#calculate tenant improvement/sqft to rent/sqft ratio
+df_main['rent_sqft'] = df_main.rate_actual / df_main.sqft_min
+df_main['ti_sqft'] = df_main.ti / df_main.sqft_min
+df_main['ti_pct'] = df_main.ti_sqft / df_main.rent_sqft
 
+#drop 'unnamed column'
+df_main = df_main.iloc[: , 1:]
 
 
 #%%
@@ -219,6 +225,7 @@ def downtime_hist():
     pct = [.99]
     pct_99 = df.days_on_market.describe(percentiles = pct).loc['99%']
     min_down = df.days_on_market.min()
+    max_down = df.days_on_market.max()
 
 
     df.days_on_market.hist(bins = 100, range = (min_down, pct_99))
@@ -239,12 +246,10 @@ def market_rent_hist():
 
     df = df_main
 
-    df['rent_diff'] = df.rate_actual / df.estimated_rent
-
     df.rent_diff.hist(bins = 100, 
                      figsize = (12, 8), 
                      #log = True
-                     range = (0,1))
+                     range = (0,3))
 
 market_rent_hist() #FUNCTION CALL
 
@@ -253,27 +258,27 @@ market_rent_hist() #FUNCTION CALL
 # %%
 
 def tenant_improve_hist():
-    '''tenant_allowance histogram'''
+    '''tenant_allowance histogram;
+        calculated w/ ratio of $/sqft allowance
+        vs. $/sqft rent'''
 
-    print('PRE-OUTLIER REMOVAL')
-    desc_stat_col('ti')
+    #%% remove negative values
+    df = df_main[(df_main.ti_pct > 0)]
+    # df = df[(df.ti_pct < 209)]
 
     df = df_main
-    df['ti_pct'] = df.ti / (df.rate_actual/df.sqft_min)
 
-    df = df[(df.ti_pct > 0)]
+    pct = [0.01, 0.05, .25, .5, .75, .95, .99, .999]
+    print(df.ti_pct.describe(percentiles = pct))
 
-
-    print('POST-OUTLIER REMOVAL')
-    print(df.ti_pct.describe())
 
     #use 99% for range max/min of 1
     print('POST OUTLIER REMOVAL')
-    df.ti_pct.hist(bins = 100, 
-                    # range = (0,1)
+    df.ti_pct.hist(bins = 75, 
+                    range = (0,0.5)
                     )
 
-tenant_improve_hist()
+tenant_improve_hist() #FUNCTION CALL
 
 
 #%%
@@ -285,8 +290,9 @@ def free_months_hist(): #would be worth correlating this with
     desc_stat_col('free_months')
 
     #remove '0's from free_months column
-    df = df_main[(df_main.free_months > 0)]
-    
+    # df = df_main[(df_main.free_months > 0)]
+
+    df = df_main 
     #use 99% for range max/min of 1
     pct = [.99]
     pct_99 = df.free_months.describe(percentiles = pct).loc['99%']
@@ -351,7 +357,7 @@ def service_type():
 
     return df1
 
-service_type()
+service_type() #FUNCTION CALL
 
 #%%
 
@@ -360,7 +366,7 @@ service_type()
 
 def renewal_hist():
 
-    '''renewal rate histogram'''
+    '''renewal rate %'''
 
     df = df_main
 
@@ -372,7 +378,7 @@ def renewal_hist():
 
     return pct_renewed
 
-renewal_hist()
+renewal_hist() #FUNCTION CALL
 
 
 
