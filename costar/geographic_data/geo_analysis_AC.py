@@ -61,9 +61,10 @@ today = datetime.today().strftime('%Y-%m-%d') #y/m/d only
 now = datetime.now()
 month = today_date.strftime("%B").upper()
 
+#%%
 
 def merge_lease_aws():
-#   '''connect to aws server'''
+    '''connect to aws server'''
 
     import psycopg2
 
@@ -90,50 +91,43 @@ def load_data():
         otherwise, pulls from aws server;
         ***REMOVES submarkets nulls'''
 
-    try:   
-        df = pd.read_csv('df_aws_merged.csv')
+             
+    df = merge_lease_aws()
 
-    except:
-        def format_types():
-            '''format types for analysis/visuals; object to int, float, date'''
-            
-            df = merge_lease_aws()
+    #df.fillna('',inplace=True)
 
-            #df.fillna('',inplace=True)
-
-            to_float1 = ['leasedeal_id', 'property_id', 'property_type_id', 
-                    'location_occupancy_id', 'service_type_id', 'sqft_min', 
-                    'sqft_max', 'renewal', 'actual_vacancy', 'rba', 'lease_term_inmonths',
-                    'free_months', 'cbsaid', 'buildingrating_id', 
-                    'construction_year', 'zip', 'days_on_market'] 
-                    #'building_age', #'lease_start_year'
-            
-            df[to_float1] = df[to_float1].applymap(float)
-            # df[to_int] = df[to_int].applymap(int)
-            '''see https://pandas.pydata.org/pandas-docs/stable/user_guide/gotchas.html#support-for-integer-na'''
+    to_float1 = ['leasedeal_id', 'property_id', 'property_type_id', 
+            'location_occupancy_id', 'service_type_id', 'sqft_min', 
+            'sqft_max', 'renewal', 'actual_vacancy', 'rba', 'lease_term_inmonths',
+            'free_months', 'cbsaid', 'buildingrating_id', 
+            'construction_year', 'zip', 'days_on_market'] 
+            #'building_age', #'lease_start_year'
+    
+    df[to_float1] = df[to_float1].applymap(float)
+    # df[to_int] = df[to_int].applymap(int)
+    '''see https://pandas.pydata.org/pandas-docs/stable/user_guide/gotchas.html#support-for-integer-na'''
 
 
-            to_float2 = ['estimated_rent', 'rate_actual', 'tenantimprovementallowancepersqft']
-            df[to_float2] = df[to_float2].applymap(float) 
+    to_float2 = ['estimated_rent', 'rate_actual', 'tenantimprovementallowancepersqft']
+    df[to_float2] = df[to_float2].applymap(float) 
 
 
-            to_date = ['date_on_market', 'date_off_market', 'lease_sign_date',
-                        'lease_expiration_date']
-            df[to_date] = df[to_date].apply(pd.to_datetime, errors = 'coerce')
+    to_date = ['date_on_market', 'date_off_market', 'lease_sign_date',
+                'lease_expiration_date']
+    df[to_date] = df[to_date].apply(pd.to_datetime, errors = 'coerce')
 
-            # add col, lease_start year
-            df['lease_start_year'] = pd.DatetimeIndex(df['from_date']).year
-            # add col building_age
-            df['building_age'] = datetime.today().year - df['construction_year']
+    # add col, lease_start year
+    df['lease_start_year'] = pd.DatetimeIndex(df['from_date']).year
+    # add col building_age
+    df['building_age'] = datetime.today().year - df['construction_year']
 
-            # remove submarket null values
-            df.dropna(subset = ['submarket_name']) #1,067,141 to 900,083
+    # remove submarket null values
+    df.dropna(subset = ['submarket_name']) #1,067,141 to 900,083
 
-            return df
-
-        df = format_types()
 
     return df
+
+#%%
 
 
 def  csv_file_write():
