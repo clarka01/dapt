@@ -9,3 +9,7 @@ df_aws_merged.csv
 data_set_stats.csv
 /data_files
 *checkpoint.ipynb
+*.twb*
+top100*.csv
+df.csv
+lease_clean*.csv
