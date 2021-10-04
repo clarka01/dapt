@@ -1,0 +1,11 @@
+## GIT IGNORE FILE FOR DAPT DIRECTORY
+
+#individual files
+df_ac.csv
+*.xlsx
+*.vscode
+subs.csv
+df_aws_merged.csv
+data_set_stats.csv
+/data_files
+*checkpoint.ipynb
