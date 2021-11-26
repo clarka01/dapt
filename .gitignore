@@ -14,3 +14,5 @@ top100*.csv
 df.csv
 lease_clean*.csv
 downtime_rent.csv
+*.png
+*.jpeg
