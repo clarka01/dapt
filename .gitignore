@@ -16,3 +16,9 @@ lease_clean*.csv
 downtime_rent.csv
 *.png
 *.jpeg
+
+#file types
+*.csv
+*.twb*
+*.png
+*.jpeg
