@@ -32,19 +32,44 @@ panderOptions('table.alignment.default', function(df)
 panderOptions('table.split.table', Inf)
 
 # import the file
-downtime_lease <- read_csv("LOCAL_REPOSITORY_LOCATION/DAPT/costar/distributions/downtime_lease_nov22.csv")
+lease_data <- read_csv("LOCAL_REPOSITORY_LOCATION/DAPT/costar/distributions/downtime_lease_nov22.csv")
 
 
-#Drop the first column
-downtime_lease <- subset (downtime_lease, select = -X1)
 
 
-days <- lease_data %>%
-  dplyr::filter(days_on_market > 0)
-fitw <- fitdist(days$days_on_market, "weibull")
-fitlnorm <- fitdist(days$days_on_market, "lnorm")
-#fitgamma <- fitdist(days$days_on_market, "gamma")
-denscomp(list(fitw, fitlnorm))
+lease <- lease_data %>%
+  dplyr::filter(vacant_months > 0 & year_off_market >= 2008 & year_off_market <= 2020)
+
+fitw <- fitdist(lease$vacant_months, "weibull")
+fitlnorm <- fitdist(lease$vacant_months, "lnorm")
+fitg <- fitdist(lease$vacant_months, "gamma")
+
+denscomp(list(fitw, fitlnorm, fitg), xlab = 'vacant_months', ylab = 'Lease Count Density')
 summary(fitw)
 summary(fitlnorm)
-denscomp(days, fitw)
+summary(fitg)
+
+
+
+
+lease_11244 <- lease %>%
+  dplyr::filter(cbsaid == 11244) 
+
+w <- fitdist(lease_11244$vacant_months, "weibull")
+lnorm <- fitdist(lease_11244$vacant_months, "lnorm")
+g <- fitdist(lease_11244$vacant_months, "gamma")
+b <- fitdist(lease_11244$vacant_months, "beta")
+
+denscomp(list(w, lnorm, g, b), xlab = 'vacant_months', ylab = 'Lease Count Density')
+summary(w)
+summary(lnorm)
+summary(g)
+summary(b)
+
+
+
+
+
+
+
+

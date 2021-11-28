@@ -11,10 +11,15 @@ import seaborn as sns
 pd.set_option("display.max_columns",999)
 import seaborn as sns
 import random
+import time
+import math
+import matplotlib.pyplot as plt
+
 from sklearn.model_selection import train_test_split
 from fitter import Fitter, get_common_distributions, get_distributions
-import time
-import re
+from scipy import stats
+
+
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -33,12 +38,11 @@ fn = 'lease_clean_oct29.csv'
 
 # VARIABLES
 
+# FITTER selected distributions
+
 # common distributions from Fitter
 # dists = list(get_common_distributions())
 # dists_all = list(get_distributions())
-
-
-# hand-selected distributions
 cauchy = 'cauchy'
 chi2 = 'chi2'
 expon = 'expon'
@@ -53,19 +57,57 @@ uniform = 'uniform'
 DISTS = [cauchy, chi2, expon, exponpow, gamma, lognorm, norm, powerlaw,
          rayleigh]
 
+# SCIPY AUTO-FIT
+
+
+from scipy.stats import (
+    norm, beta, expon, gamma, genextreme, logistic, lognorm, triang, uniform, fatiguelife,            
+    gengamma, gennorm, dweibull, dgamma, gumbel_r, powernorm, rayleigh, weibull_max, weibull_min, 
+    laplace, alpha, genexpon, bradford, betaprime, burr, fisk, genpareto, hypsecant, 
+    halfnorm, halflogistic, invgauss, invgamma, levy, loglaplace, loggamma, maxwell, 
+    mielke, ncx2, ncf, nct, nakagami, pareto, lomax, powerlognorm, powerlaw, rice, 
+    semicircular, trapezoid, rice, invweibull, foldnorm, foldcauchy, cosine, exponpow, 
+    exponweib, wald, wrapcauchy, truncexpon, truncnorm, t, rdist
+    )
+
+distributions = [
+    norm, beta, expon, gamma, genextreme, logistic, lognorm, triang, uniform, fatiguelife,            
+    gengamma, gennorm, dweibull, dgamma, gumbel_r, powernorm, rayleigh, weibull_max, weibull_min, 
+    laplace, alpha, genexpon, bradford, betaprime, burr, fisk, genpareto, hypsecant, 
+    halfnorm, halflogistic, invgauss, invgamma, levy, loglaplace, loggamma, maxwell, 
+    mielke, ncx2, ncf, nct, nakagami, pareto, lomax, powerlognorm, powerlaw, rice, 
+    semicircular, trapezoid, rice, invweibull, foldnorm, foldcauchy, cosine, exponpow, 
+    exponweib, wald, wrapcauchy, truncexpon, truncnorm, t, rdist
+    ]
+
+# Kolmogorov-Smirnov KS test for goodness of fit: samples
+ksN = 100
+# significance level for hypothesis test
+ALPHA = 0.05       
+
+
+
+# DATA FILTER VARIABLES
+
 # minimum lease CNT in best_fit analysis (min = 20: df = 40, dfA = 20, dfB = 20)
 MIN_LEASE_COUNT = 20
 
 # include vacancy_months dataset
 INCLUDE_ZERO  = False
 
+# start and end dates for reading data frame
+START_DATE = 2008
+END_DATE = 2020
+
+# variable strings
 A = 'A'
 B = 'B'
 
 #TODO: see what other fits to add to DISTS...
 
+#%%
 
-def read_data():
+def read_data(start_date, end_date):
     # reads in Oct 29 rds lease data
     
     conn = psycopg2.connect(
@@ -78,9 +120,9 @@ def read_data():
     cursor = conn.cursor() 
 
     try:
-        df = pd.read_csv(os.path.join(path_dist, 'downtime_rent.csv'))
-        # print(f'Data Source: {fn}')
-        #logger('Data Source: csv')
+        df = pd.read_csv(os.path.join(path_dist, 'downtime_lease_nov22.csv'))
+        # old source
+        # df = pd.read_csv(os.path.join(path_dist, 'downtime_rent.csv')) 
 
         
     except:
@@ -111,9 +153,12 @@ def read_data():
     # cbsa to integer
     df.cbsaid = df.cbsaid.astype(np.int)
 
+    # filter by dates (2008 - 2020)
+    df = df[(df['year_off_market'] >= start_date) & (df['year_off_market'] <= end_date) ]
+
     return df
 
-df = read_data()
+df = read_data(START_DATE, END_DATE)
 
 
 #%%
@@ -156,7 +201,7 @@ def dist_national(d):
     f = Fitter(dt,
                distributions = d)
     # graph
-    f.fit()
+    f.fit(bins = 7)
 
     # summary of stats
     s = f.summary()
@@ -165,11 +210,20 @@ def dist_national(d):
 
 dist_national(DISTS)
 
+#%%
+
+def dist_national_sp(d):
+    #auto-fit scipy
+
+
+
+
 # dist_national(['lognorm','powerlaw', '')
 
 #%%
 def dist_cbsa(cbsa):
-    # outputs distribution of CBSA before splitting data (ensures same dist for both)
+    # outputs best-fit distribution of CBSA before splitting data 
+    # (ensures same dist for both)
 
     # df = read_data()
 
@@ -179,7 +233,7 @@ def dist_cbsa(cbsa):
     # downtime frequency as list / into fitter
     dt = df2.vacant_months.to_list()
     f = Fitter(dt,
-               distributions = DISTS)
+               distributions = get_distributions())
 
     f.fit()
 
@@ -194,7 +248,7 @@ def dist_cbsa(cbsa):
 
     return cbsa, k
 
-
+#bins have an affect on the line fit within the historgram plot
 a = dist_cbsa(top_cbsa(0,-1)[0])
 
 #%%
