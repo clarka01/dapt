@@ -13,13 +13,12 @@ import seaborn as sns
 import random
 import time
 import math
-import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split
-from fitter import Fitter, get_common_distributions, get_distributions
-from scipy import stats
-
-
+from fitter import Fitter #, get_common_distributions, get_distributions
+#from scipy import stats
+#import scipy.integrate as integrate
+#from scipy.integrate import quad
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -43,47 +42,57 @@ fn = 'lease_clean_oct29.csv'
 # common distributions from Fitter
 # dists = list(get_common_distributions())
 # dists_all = list(get_distributions())
-cauchy = 'cauchy'
-chi2 = 'chi2'
-expon = 'expon'
-exponpow = 'exponpow'
-gamma = 'gamma'
-lognorm = 'lognorm'
-norm = 'norm'
-powerlaw = 'powerlaw'
-rayleigh = 'rayleigh'
-uniform = 'uniform'
 
-DISTS = [cauchy, chi2, expon, exponpow, gamma, lognorm, norm, powerlaw,
-         rayleigh]
+expon = 'expon'
+gamma = 'gamma'
+genpareto = 'genpareto'
+gilbrat = 'gilbrat'
+halfgennorm = 'halfgennorm'
+halflogistic = 'halflogistic'
+lognorm = 'lognorm'
+lomax = 'lomax'
+pareto = 'pareto'
+reciprocal = 'reciprocal'
+truncexpon = 'truncexpon'
+wald = 'wald'
+
+
+
+DISTS = [expon, gamma, genpareto, gilbrat, halfgennorm, halflogistic, lognorm, lomax,
+        pareto, reciprocal, truncexpon, wald]
+
+
 
 # SCIPY AUTO-FIT
 
 
 from scipy.stats import (
-    norm, beta, expon, gamma, genextreme, logistic, lognorm, triang, uniform, fatiguelife,            
-    gengamma, gennorm, dweibull, dgamma, gumbel_r, powernorm, rayleigh, weibull_max, weibull_min, 
-    laplace, alpha, genexpon, bradford, betaprime, burr, fisk, genpareto, hypsecant, 
-    halfnorm, halflogistic, invgauss, invgamma, levy, loglaplace, loggamma, maxwell, 
-    mielke, ncx2, ncf, nct, nakagami, pareto, lomax, powerlognorm, powerlaw, rice, 
-    semicircular, trapezoid, rice, invweibull, foldnorm, foldcauchy, cosine, exponpow, 
-    exponweib, wald, wrapcauchy, truncexpon, truncnorm, t, rdist
+    # norm, beta, expon, gamma, genextreme, logistic, lognorm, triang, uniform, fatiguelife,            
+    # gengamma, gennorm, dweibull, dgamma, gumbel_r, powernorm, rayleigh, weibull_max, weibull_min, 
+    # laplace, alpha, genexpon, bradford, betaprime, burr, fisk, genpareto, hypsecant, 
+    # halfnorm, halflogistic, invgauss, invgamma, levy, loglaplace, loggamma, maxwell, 
+    # mielke, ncx2, ncf, nct, nakagami, pareto, lomax, powerlognorm, powerlaw, rice, 
+    # semicircular, trapezoid, rice, invweibull, foldnorm, foldcauchy, cosine, exponpow, 
+    # exponweib, wald, wrapcauchy, truncexpon, truncnorm, t, rdist
+    truncexpon, genpareto
     )
 
 distributions = [
-    norm, beta, expon, gamma, genextreme, logistic, lognorm, triang, uniform, fatiguelife,            
-    gengamma, gennorm, dweibull, dgamma, gumbel_r, powernorm, rayleigh, weibull_max, weibull_min, 
-    laplace, alpha, genexpon, bradford, betaprime, burr, fisk, genpareto, hypsecant, 
-    halfnorm, halflogistic, invgauss, invgamma, levy, loglaplace, loggamma, maxwell, 
-    mielke, ncx2, ncf, nct, nakagami, pareto, lomax, powerlognorm, powerlaw, rice, 
-    semicircular, trapezoid, rice, invweibull, foldnorm, foldcauchy, cosine, exponpow, 
-    exponweib, wald, wrapcauchy, truncexpon, truncnorm, t, rdist
+    # norm, beta, expon, gamma, genextreme, logistic, lognorm, triang, uniform, fatiguelife,            
+    # gengamma, gennorm, dweibull, dgamma, gumbel_r, powernorm, rayleigh, weibull_max, weibull_min, 
+    # laplace, alpha, genexpon, bradford, betaprime, burr, fisk, genpareto, hypsecant, 
+    # halfnorm, halflogistic, invgauss, invgamma, levy, loglaplace, loggamma, maxwell, 
+    # mielke, ncx2, ncf, nct, nakagami, pareto, lomax, powerlognorm, powerlaw, rice, 
+    # semicircular, trapezoid, rice, invweibull, foldnorm, foldcauchy, cosine, exponpow, 
+    # exponweib, wald, wrapcauchy, truncexpon, truncnorm, t, rdist
+        truncexpon, genpareto
+
     ]
 
 # Kolmogorov-Smirnov KS test for goodness of fit: samples
-ksN = 100
+# ksN = 100
 # significance level for hypothesis test
-ALPHA = 0.05       
+# ALPHA = 0.05       
 
 
 
@@ -102,6 +111,9 @@ END_DATE = 2020
 # variable strings
 A = 'A'
 B = 'B'
+aic = 'aic'
+bic = 'bic'
+sumsquare_error = 'sumsquare_error'
 
 #TODO: see what other fits to add to DISTS...
 
@@ -201,24 +213,19 @@ def dist_national(d):
     f = Fitter(dt,
                distributions = d)
     # graph
-    f.fit(bins = 7)
+    f.fit()
 
     # summary of stats
-    s = f.summary()
+    f.summary()
+
+    s = f.get_best(method = 'aic')  
+    # t = f.get_best(method = 'bic')  
+    # u = f.get_best(method = 'sumsquare_error')  
     
-    return s
+    return s #, t, u
 
-dist_national(DISTS)
+dist_national(DISTS) #verified that parameters don't change according to bin
 
-#%%
-
-def dist_national_sp(d):
-    #auto-fit scipy
-
-
-
-
-# dist_national(['lognorm','powerlaw', '')
 
 #%%
 def dist_cbsa(cbsa):
@@ -233,7 +240,9 @@ def dist_cbsa(cbsa):
     # downtime frequency as list / into fitter
     dt = df2.vacant_months.to_list()
     f = Fitter(dt,
-               distributions = get_distributions())
+               distributions = DISTS)
+
+    #%% fitter.py bins = 28
 
     f.fit()
 
@@ -242,11 +251,15 @@ def dist_cbsa(cbsa):
 
     # display best fit & parameters (e.g. exponpow b:, loc:, scale:)
     s = f.get_best(method = 'aic')
+    # t = f.get_best(method = 'bic')
+    # u = f.get_best(method = 'sumsquare_error')
 
     # retains key (best fit distribution) from dictinary object
     k = list(s)[0]
+    # h = list(t)[0]
+    # i = list(u)[0]
 
-    return cbsa, k
+    return cbsa, k, # h, i
 
 #bins have an affect on the line fit within the historgram plot
 a = dist_cbsa(top_cbsa(0,-1)[0])
@@ -267,11 +280,10 @@ def dist_cbsa_list(start, end):
 
 df_dist = dist_cbsa_list(0,-1)
 
-# df_dist.to_csv(f'cbsa_fit_zero-{INCLUDE_ZERO}_cbsa-cnt{df_dist.shape[0]}.csv', index = False)
+# df_dist.to_csv('distributions_best_fit.csv', index = False)
 
 
 #%%
-
 
 
 def dist_cbsa_split_A(cbsa):
@@ -311,6 +323,10 @@ def dist_cbsa_split_A(cbsa):
     dfmA['AB'] = 'A'
 
     return dfmA
+
+dist_cbsa_split_A(11244)
+
+#%%
 
 def dist_cbsa_split_B(cbsa):
     # gets dist by cbsaid
@@ -369,6 +385,8 @@ def concat_cbsa_fits_params():
 
     dfmA = pd.concat(dfsA)
 
+
+
     # combine all fits / parameters for B split
 
     dfsB = []
@@ -385,19 +403,23 @@ def concat_cbsa_fits_params():
     dfm.reset_index(inplace=True)
     dfm.drop(columns = 'level_0', inplace = True)
 
+    # ensure correct renaming occurs below:
+    print(dfm.columns)
+
     # A & B sets to columns / flatten df / rename / rearrange
     df10 = pd.pivot_table(dfm,
                          index = ['cbsa', 'index'],
                          columns = ['AB'], 
-                         values= ['a', 'b', 'loc', 'scale']
+                         values= ['b', 'c', 'loc', 'scale']
                         )
     
     df11 = pd.DataFrame(df10.to_records())
 
-    df11.rename(columns = { df11.columns[2]: 'a1', 
-                            df11.columns[3]: 'a2', 
-                            df11.columns[4]: 'b1',
-                            df11.columns[5]: 'b2',
+    df11.rename(columns = { df11.columns[1]: 'best_fit',
+                            df11.columns[2]: 'b1', 
+                            df11.columns[3]: 'b2', 
+                            df11.columns[4]: 'c1',
+                            df11.columns[5]: 'c2',
                             df11.columns[6]: 'loc1',
                             df11.columns[7]: 'loc2',
                             df11.columns[8]: 'scale1',
@@ -407,24 +429,16 @@ def concat_cbsa_fits_params():
                 )
     
     # rearrange columns
-    cols = ['cbsa', 'index', 
-            'a1', 'b1', 'loc1', 'scale1', 
-            'a2', 'b2', 'loc2', 'scale2']
+    cols = ['cbsa', 'best_fit', 
+            'b1', 'c1', 'loc1', 'scale1', 
+            'b2', 'c2', 'loc2', 'scale2']
 
     dff = df11[cols]
 
 
+
     return dff
 
+#final output for best distribution fit for fitter library.
 dfm = concat_cbsa_fits_params()
-
-
-#%%
-
-#################### INTEGRATION ########################
-
-
-
-
-
 
