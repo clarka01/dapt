@@ -442,3 +442,5 @@ def concat_cbsa_fits_params():
 #final output for best distribution fit for fitter library.
 dfm = concat_cbsa_fits_params()
 
+dfm.to_csv(r'best_fit_by_cbsa.csv', index = False)
+
