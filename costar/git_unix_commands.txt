@@ -1,0 +1,44 @@
+UNIX COMMANDS for Gitbash/powershell or other command lines:
+    Here's a good resource: http://www.mathcs.emory.edu/~valerie/courses/fall10/155/resources/unix_cheatsheet.html
+
+pwd - shows current folder, stands for (primary working directory)
+
+ls - lists files and folders in current directory
+
+cd folder_name - change directory; press 'tab' to autofill [sometimes this doesn't work]
+
+    cd folder_name/folder_name2 - drills down two folder levels
+
+    cd .. - go 'up' one level; cd ../.. goes 'up' two levels
+
+code file_name.py - opens file name
+
+
+
+GIT COMMANDS work within VScode/Gitbash terminal:
+    Here's a good resource: https://www.youtube.com/watch?v=RGOj5yH7evk
+
+git status - shows any untracked changes in LOCAL repository; 
+             must navigate to local repository says...will say "(main)" at end of file path
+
+git pull - pulls latest files from github.com repository to local drive. 
+
+git add - adds file to staging area (putting the order in a box)
+
+git commit -m 'message/description' - commits file to changes (puts box on truck)
+    
+    git reset file_name.py - uncommits change (takes box off of truck)
+
+git push - change takes affect in github repository (truck delivers box)
+
+        remember, you can take the package off of the truck, but once the truck leaves, the box is delivered...
+        but ALL changes are recorded in the github.com repository. 
+
+git log - shows log of changes by your user to repository
+
+
+
+
+
+
+
