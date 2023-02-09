@@ -1,0 +1,7 @@
+1. Register an account with Databricks community edition:
+https://community.cloud.databricks.com/login.html (Links to an external site.)
+
+2. Read "The Genesis of Spark" (pages 1-3) in "Learning Spark" from Databricks:
+https://pages.databricks.com/rs/094-YMS-629/images/LearningSpark2.0.pdf (Links to an external site.)
+
+3. Login to the Databricks Community Edition (using the account created in step 1), and start walking through the "Explore the Quickstart Tutorial" on the landing page

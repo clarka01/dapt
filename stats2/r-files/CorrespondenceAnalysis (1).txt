@@ -1,0 +1,21 @@
+Eye Color,Hair Color,Count
+Light,Blond,688
+Light,Red,116
+Light,Medium,584
+Light,Dark,188
+Light,Black,4
+Blue,Blond,326
+Blue,Red,38
+Blue,Medium,241
+Blue,Dark,110
+Blue,Black,3
+Brown,Blond,343
+Brown,Red,84
+Brown,Medium,909
+Brown,Dark,412
+Brown,Black,26
+Black,Blond,98
+Black,Red,48
+Black,Medium,403
+Black,Dark,681
+Black,Black,81

@@ -1,0 +1,88 @@
+Codebook for School23 Data (School23.txt)
+
+Variable Name          Variable Coding            Variable Description
+----------------------------------------------------------------------
+SCHOOL                                            School Id
+
+
+STUDENT                                           Student Id
+
+
+SEX                    1 = Male                   Student Sex
+                       2 = Female
+
+
+RACE                   1 = Asian/Pi               Student Race
+                       2 = Hispanic
+                       3 = Black
+                       4 = White
+                       5 = Native American
+
+
+HOMEW                  0 = None                   Time On Math Homework
+                       1 = less than 1 Hour
+                       2 = 1 Hour
+                       3 = 2 Hours
+                       4 = 3 Hours
+                       5 = 4 to 6 Hours
+                       6 = 7 to 9 Hours
+                       7 = greater or equal
+                           10 Hours
+
+
+SCHTYPE                1 = Public                 School Type
+                       2 = Catholic
+                       3 = Private Religious
+                       4 = Private
+
+SES                    Continuous                 Socioeconomic Status
+
+
+
+PARED                  1 = No HS Degree Parental Education
+                       2 = HS Grad / Ged
+                       3 = HS / Less than
+                           4 Year College
+                       4 = College Grad
+                       5 = "Masters"
+                       6 = Doctorate
+
+MATH                   Continuous                 Math Score
+
+
+CLASSSTR               1 = Not At All Accurate    Class Structure
+                       7 = Very Much Accurate
+
+SCHSIZE                1 = 1 to 199               School Size
+                       2 = 200 to 399
+                       3 = 400 to 599
+                       4 = 600 to 799
+                       5 = 800 to 999
+                       6 = 1000 to 1199
+                       7 = 1200+
+
+
+URBAN                  1 = Urban                  Urbanicity
+                       2 = Suburban
+                       3 = Rural
+
+
+GEO                    1 = Northeast              Geographic Region
+                       2 = North Central
+                       3 = South
+                       4 = West
+
+
+MINORITY               0 = 0%                     Percent Minority
+                       1 = 1-5%
+                       2 = 6-10%
+                       3 = 11-20%
+                       4 = 21-40%
+                       5 = 41-60%
+                       6 = 61-90%
+                       7 = 91-100%
+
+
+RATIO                  Continuous but             Student-Teacher Ratio
+                       10 = less than or
+                            equal to 10

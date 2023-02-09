@@ -1,0 +1,13 @@
+Installing Pyomo and brooks.py
+If you are using an existing installation of Anaconda Python, make sure that your installation is up to date by going to the start menu and select Anaconda -> Anaconda Prompt.  Type "conda update --all" and follow the prompts (type 'y') to update the software.
+
+Video:
+https://youtu.be/quIX4g3Pl9g (Links to an external site.)
+
+
+Pyomo, GLPK, Jupyter Lab
+From the Start menu, click on Anaconda Prompt.
+Type “conda update --all” to verify the version.  Type “y” to update conda if asked.
+conda install -c conda-forge pyomo
+conda install -c conda-forge glpk
+Files for Pyomo test:

@@ -1,0 +1,21 @@
+Envelope Teaser,Return Address,Official Ink-stamp,Postage,Additional Graphics,Price Graphice,Sticker,Personalize Letter,Copy Message,Letter Headline,List of Benefits,Postscript on Letter,Signature,Product Selection,Value of Free Gift,Reply Envelope,Information on Buckslip,2nd Buckslip,Interest Rate,Orders,Response Rate
+Product-specific offer,Add company name,Yes,Pre-printed,No,Large,No,Yes,Targeted,Headline 2,Standard layout,New P.S.,Manager,Many,High,Control,Free gift info,Yes,Low,52,1.04
+General offer,Add company name,No,Pre-printed,Yes,Large,No,Yes,Generic,Headline 1,Creative layout,Control version,Senior Executive,Many,High,Control,Product info,Yes,High,38,0.76
+Product-specific offer,Blind,No,Stamp,Yes,Small,No,Yes,Generic,Headline 2,Standard layout,New P.S.,Manager,Few,High,Control,Product info,No,High,42,0.84
+Product-specific offer,Add company name,Yes,Stamp,No,Small,Yes,Yes,Generic,Headline 2,Creative layout,Control version,Senior Executive,Many,Low,Control,Product info,No,Low,134,2.68
+General offer,Add company name,No,Pre-printed,No,Large,Yes,No,Generic,Headline 2,Creative layout,New P.S.,Manager,Few,High,New Style,Product info,No,Low,104,2.08
+General offer,Blind,No,Stamp,Yes,Large,No,No,Targeted,Headline 2,Creative layout,New P.S.,Senior Executive,Many,Low,Control,Free gift info,No,Low,60,1.2
+General offer,Blind,Yes,Stamp,No,Small,No,Yes,Targeted,Headline 1,Creative layout,New P.S.,Senior Executive,Few,High,New Style,Product info,Yes,Low,61,1.22
+General offer,Blind,Yes,Pre-printed,No,Large,Yes,Yes,Generic,Headline 1,Standard layout,New P.S.,Senior Executive,Few,Low,Control,Free gift info,No,High,68,1.36
+Product-specific offer,Blind,Yes,Pre-printed,Yes,Large,No,No,Generic,Headline 2,Standard layout,Control version,Senior Executive,Few,Low,New Style,Product info,Yes,Low,57,1.14
+General offer,Add company name,Yes,Pre-printed,Yes,Small,No,Yes,Targeted,Headline 2,Creative layout,Control version,Manager,Few,Low,New Style,Free gift info,No,High,30,0.6
+Product-specific offer,Blind,No,Pre-printed,Yes,Small,Yes,Yes,Generic,Headline 1,Creative layout,New P.S.,Manager,Many,Low,New Style,Free gift info,Yes,Low,108,2.16
+General offer,Add company name,Yes,Stamp,Yes,Small,Yes,No,Generic,Headline 2,Standard layout,New P.S.,Senior Executive,Many,High,New Style,Free gift info,Yes,High,39,0.78
+Product-specific offer,Blind,No,Pre-printed,No,Small,Yes,No,Targeted,Headline 2,Creative layout,Control version,Senior Executive,Few,High,Control,Free gift info,Yes,High,40,0.8
+Product-specific offer,Add company name,Yes,Stamp,Yes,Large,Yes,No,Targeted,Headline 1,Creative layout,New P.S.,Manager,Few,Low,Control,Product info,Yes,High,49,0.98
+Product-specific offer,Add company name,No,Pre-printed,No,Small,No,No,Targeted,Headline 1,Standard layout,New P.S.,Senior Executive,Many,Low,New Style,Product info,No,High,37,0.74
+Product-specific offer,Add company name,No,Stamp,Yes,Large,Yes,Yes,Targeted,Headline 1,Standard layout,Control version,Senior Executive,Few,High,New Style,Free gift info,No,Low,99,1.98
+General offer,Add company name,No,Stamp,No,Small,No,No,Generic,Headline 1,Standard layout,Control version,Manager,Few,Low,Control,Free gift info,Yes,Low,86,1.72
+General offer,Blind,No,Stamp,No,Large,Yes,Yes,Targeted,Headline 2,Standard layout,Control version,Manager,Many,Low,New Style,Product info,Yes,High,43,0.86
+Product-specific offer,Blind,Yes,Stamp,No,Large,No,No,Generic,Headline 1,Creative layout,Control version,Manager,Many,High,New Style,Free gift info,No,High,47,0.94
+General offer,Blind,Yes,Pre-printed,Yes,Small,Yes,No,Targeted,Headline 1,Standard layout,Control version,Manager,Many,High,Control,Product info,No,Low,104,2.08
