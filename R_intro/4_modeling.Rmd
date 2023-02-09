@@ -1,0 +1,383 @@
+---
+title: "Regression and Classification in R"
+author: "Paul Brooks"
+output: pdf_document
+---
+
+
+```{r results='asis',warning=FALSE,echo=FALSE}
+library(knitr)
+library(rgl)
+knit_hooks$set(rgl=hook_rgl)
+knit_hooks$set(webgl = hook_webgl)
+cat('<script type="text/javascript">', readLines(system.file('WebGL', 
+    'CanvasMatrix.js', package = 'rgl')), '</script>', sep = '\n')
+hook_plot = knit_hooks$get('plot')
+knit_hooks$set(plot = function(x, options) paste('\n', hook_plot(x, options), sep = ''))
+```
+
+Load libraries.
+
+```{r message=FALSE, warning=FALSE}
+library(caret)
+library(dplyr)
+library(rgl)
+library(rpart)
+library(ROCR)
+library(randomForest)
+```
+
+Don't forget to set your working directory (Session -> Set Working Directory)!
+
+## Introduction
+Set the random number generator seed.
+```{r}
+set.seed(12345)
+```
+
+Read in the clean home data.
+
+```{r}
+home_data <- read.table("home_data_clean.csv", header=TRUE, row.names=1, sep=",",
+                       comment.char="", colClasses=c("character", 
+                       rep("factor",2), rep("numeric",4), rep("factor",3))) 
+```
+
+Read in the adult census data. Remove the last (extra) column.
+
+```{r}
+adult_data <- read.table("adult_data.csv", header=TRUE, sep=",",
+                       colClasses = c("numeric", "factor",
+                      "numeric", "factor", "numeric", rep("factor",5),
+                      rep("numeric",3), rep("factor",2)), na.strings=" ?")
+
+```                      
+
+Read in the 2019 procurement data.  The data will be in a data frame called eva_2019.
+```{r}
+load("eva_2019.rda")
+```
+
+## Regression
+
+For the regression examples, we will use the home price data.
+
+### Simple Linear Regression
+
+Build a simple linear regression model of home price as a function of square footage.
+```{r}
+price_sq_ft_lm <- lm(Price ~ Sq..Ft., data=home_data)
+summary(price_sq_ft_lm)
+```
+
+Plot the home price and square footage and add the best-fit line on the scatter plot.
+```{r}
+plot(home_data$Sq..Ft., home_data$Price, xlab="Square Footage", ylab="Price",
+    pch=16, col="blue")
+abline(price_sq_ft_lm, lwd=3)
+```
+
+Show predicted values of prices for all values of square footage.
+```{r}
+predict(price_sq_ft_lm)
+```
+
+Show predicted values of prices for specified values of square footage.
+```{r}
+predict(price_sq_ft_lm, list(Sq..Ft. = c(1200,1400,2000,3500)))
+```
+
+### Multiple Regression
+
+#### Example 1: Three variables
+
+
+Build a model of price based on square footage and number of bathrooms.
+```{r}
+price_sq_ft_bath_df <- data.frame(home_data[,c("Sq..Ft.","Baths","Price")])
+price_sq_ft_bath_lm <- lm(Price ~ ., data=price_sq_ft_bath_df)
+summary(price_sq_ft_bath_lm)
+```
+
+
+Plot the home price versus square footage and number of bathrooms, and add the regression plane on the scatter plot.
+```{r rgl=TRUE}
+plot3d(price_sq_ft_bath_df)
+planes3d(a=price_sq_ft_bath_lm$coefficients[2],b=price_sq_ft_bath_lm$coefficients[3],
+         c=-1.0, d=price_sq_ft_bath_lm$coefficients[1], alpha=0.05)
+```
+
+#### Example 2: More than Three Variables and Categorical Variables
+
+
+Build a model of price based on location, number of bedrooms, number of bathrooms, square footage, and realtor group.
+
+```{r}
+my_mlr_df <- home_data[,c("Price", "Location", "Bedrooms", "Baths", "Sq..Ft.", 
+                       "Realtor.Group")]
+my_mlr_lm <- lm(Price ~ ., data=my_mlr_df)
+summary(my_mlr_lm)
+```
+
+List only the significant variables at the 0.10 level.
+
+```{r}
+my_mlr_summary <- summary(my_mlr_lm)
+my_mlr_predictors <- names(which(my_mlr_summary$coefficients[,4] < 0.10))
+my_mlr_predictors
+```
+
+## Classification
+
+For the classification examples, we will use the adult census data to try to predict whether an individual makes more or less than \$50k.
+
+### Logistic Regression
+
+Build a logistic regression model to predict whether an individual makes more or less than \$50k based on education and capital gains.
+
+```{r}
+my_adult_df <- adult_data[,c("Over.Under", "education", "capital.gain")]
+
+my_adult_lr <- glm(Over.Under ~ ., data = my_adult_df, family=binomial("logit"))
+summary(my_adult_lr)
+```
+Obtain the odds ratios by exponentiating the coefficients.
+```{r}
+exp(coef(my_adult_lr))
+```
+
+Round the probability of prediction to each class ($\geq$ \$50k or not) to 
+predict and obtain a confusion matrix.
+```{r}
+my_adult_predict <- predict(my_adult_lr, my_adult_df, type="response")
+my_adult_predict_class <- character(length(my_adult_predict))
+my_adult_predict_class[my_adult_predict < 0.5] <- "< $50k"
+my_adult_predict_class[my_adult_predict >= 0.5] <- ">= $50k"
+my_adult_cm <- table(my_adult_df$Over.Under, my_adult_predict_class)
+my_adult_cm
+```
+
+Because there are many more people who make less than \$50k, we will use weights to place a larger penalty on misclassifying those making more than \$50k.
+
+```{r}
+summary(my_adult_df$Over.Under)
+```
+
+The following weights denote that the cost of misclassifying someone making more than \$50K is twice as much as that of someone making less.
+```{r}
+my_weights <- numeric(nrow(my_adult_df))
+my_weights[my_adult_df$Over.Under == " <=50K"] <- 1 
+my_weights[my_adult_df$Over.Under == " >50K"]  <- 2
+```
+
+Fit a new model.
+```{r warning=FALSE}
+my_adult_lr <- glm(Over.Under ~ ., data = my_adult_df, family=binomial("logit"),
+                 weights=my_weights)
+my_adult_predict <- predict(my_adult_lr, my_adult_df, type="response")
+my_adult_predict_class <- character(length(my_adult_predict))
+my_adult_predict_class[my_adult_predict < 0.5] <- "<50K"
+my_adult_predict_class[my_adult_predict >= 0.5] <- ">=50K"
+my_adult_cm <- table(my_adult_df$Over.Under, my_adult_predict_class)
+my_adult_cm
+```
+
+
+### Classification Trees
+
+Build a classification tree model.  We will use the same weights as before.
+```{r}
+my_adult_rpart <- rpart(Over.Under ~ ., data=my_adult_df, weights=my_weights)
+```
+
+Plot the tree and rules.
+```{r}
+plot(my_adult_rpart)
+text(my_adult_rpart)
+```
+
+Inspect which variables are most important for prediction.
+```{r}
+my_adult_rpart$variable.importance
+```
+
+## Evaluating Classification Models
+
+### Partitioning Data
+
+Create a random partition of data into train and test datasets as follows.
+```{r}
+train_rows <- createDataPartition(my_adult_df$Over.Under,
+				 p=0.5,
+				 list=FALSE)
+train_adult <- my_adult_df[train_rows,]
+test_adult <- my_adult_df[-train_rows,]
+```
+
+Train a classification model using the train data, and test using the test data.
+```{r}
+my_weights <- numeric(nrow(train_adult))
+my_weights[train_adult$Over.Under == " <=50K"] <- 1
+my_weights[train_adult$Over.Under == " >50K"]  <- 2
+
+my_adult_rpart <- rpart(Over.Under ~ ., data=train_adult, weights=my_weights)
+my_adult_predict_rpart <- predict(my_adult_rpart, newdata=test_adult, type="class")
+table(test_adult$Over.Under, my_adult_predict_rpart)
+```
+
+### ROC Curves
+Get true positive and false positive rates on test data for logistic regression and classification trees.
+```{r}
+my_adult_lr <- glm(Over.Under ~ ., data = train_adult, family=binomial("logit"),
+               weights=my_weights)
+adult_predict_lr <- predict(my_adult_lr, test_adult, type="response")
+adult_pred_lr <- prediction(adult_predict_lr, test_adult$Over.Under)
+adult_perf_lr <- performance(adult_pred_lr, "tpr", "fpr")
+
+my_adult_rpart <- rpart(Over.Under ~ ., data=train_adult, weights=my_weights)
+adult_predict_rpart  <- predict(my_adult_rpart, test_adult, type="prob")
+adult_pred_rpart <- prediction(adult_predict_rpart[,2], test_adult$Over.Under)
+adult_perf_rpart <- performance(adult_pred_rpart, "tpr", "fpr")
+```
+
+Plot the ROC curves
+```{r}
+plot(adult_perf_lr, col=1)
+plot(adult_perf_rpart, col=2, add=TRUE)
+legend(0.7, 0.6, c("Log. Reg.", "Class. Tree"), col=1:2, lwd=3)
+```
+
+Calculate area under the curve (AUC).
+```{r}
+adult_lr_auc <- performance(adult_pred_lr, "auc")
+adult_lr_auc@y.values[[1]]
+adult_rpart_auc <- performance(adult_pred_rpart, "auc")
+adult_rpart_auc@y.values[[1]]
+```
+
+## Solutions to Exercises
+
+### Home Data
+The worst outlier has an unusually large price.  Check the number of houses over $4 million.
+```{r}
+sum(home_data$Price > 4000000)
+```
+There is just one.  Exclude that point and create a new data frame.
+
+```{r}
+home_data2 <- home_data[home_data$Price < 4000000,]
+```
+
+Build a new model of price based on location, number of bedrooms, number of bathrooms, square footage, and Realtor group.
+```{r}
+my_mlr_df_2 <- home_data2[,c("Price", "Location", "Bedrooms", "Baths", "Sq..Ft.",
+                        "Realtor.Group")]
+my_mlr_lm_2 <- lm(Price ~ ., data=my_mlr_df_2)
+summary(my_mlr_lm_2)
+```
+
+1. The p-value for the model decreases to $2.2\times 10^{-16}$, meaning that the significance of the relationship between the independent and dependent variables increases. 
+2.  The $R^2$ increases from 0.09 to 0.667, indicating a better linear fit for the model.
+3. Location in Goochland, location in Henrico, and square footage are now significant.  All other variables constant, locating a house in Goochland adds $266,768.47 to the price. Locating a house in Henrico adds $79,365.20 to the price.  An additional square foot adds $58.32 to the price of a house.
+4. Predict the price of a 2000 square foot house in Henrico with four bedrooms, two bathrooms listed with Long and Foster.
+
+```{r}
+predict(my_mlr_lm_2, list(Sq..Ft. = 2000, Location="Henrico", Bedrooms=4, 
+                       Baths=2, Realtor.Group="Long & Foster REALTORS"))
+```
+
+The predicted price is $284,776.40.
+
+### Procurement Data
+
+For the 2019 procurement data (case), consider the total cost of purchases for VCU.
+
+1. Build a random forest model to predict whether the total cost of a purchase will be above $1,000 based on the purchase order category and the quantity ordered. 
+
+Filter to select only the VCU data.  Then create a new response indicating whether the total cost is above $1,000 or not, and drop the original total cost column.
+
+```{r}
+vcu_data <- eva_2019 %>%
+  dplyr::filter(Entity.Description == "Virginia Commonwealth University")  %>%
+  dplyr::select(Total.Cost, PO.Category, Quantity.Ordered) %>%
+  dplyr::mutate(above_1k = factor(Total.Cost > 1000)) %>%
+  dplyr::select(-Total.Cost)
+
+dim(vcu_data)
+```
+
+Create train and test datasets.  
+```{r}
+train_rows <- createDataPartition(vcu_data$above_1k,
+				 p=0.5,
+				 list=FALSE)
+train_vcu <- vcu_data[train_rows,]
+test_vcu <- vcu_data[-train_rows,]
+```
+
+Check the numbers in each class to see if we need to adjust the weights.
+```{r}
+summary(vcu_data$above_1k)
+```
+
+Note that the costs for the *randomForest()* function are assigned by class and not by observation.  Fit a model.
+```{r}
+vcu_rf <- randomForest(above_1k ~ ., 
+		       data=train_vcu, 
+		       weights=c(1,5),
+		       importance=TRUE)
+
+```
+
+2. View the important variables for prediction.  Quantity ordered is more important than purchase order category.
+```{r}
+vcu_rf$importance
+```
+
+3. Obtain the prediction for the customer.  The prediction is that the cost will be below $1,000.
+```{r}
+predict(vcu_rf, 
+	list(Quantity.Ordered=20,
+	     PO.Category=factor("P01", levels=levels(train_vcu$PO.Category)))
+	)
+```
+
+4.  Build a logistic regression model and get true positive and false positive rates.
+
+For logistic regression, first specify weights for each observation.
+
+```{r}
+my_weights <- numeric(nrow(train_vcu))
+my_weights[train_vcu$above_1k == FALSE] <- 1
+my_weights[train_vcu$above_1k == TRUE] <- 5
+```
+
+Get the true positive and false positive rates for the logistic regression model.
+```{r}
+vcu_lr <- glm(above_1k ~ ., 
+	      data = train_vcu, 
+	      family=binomial("logit"),
+	      weights=my_weights)
+vcu_predict_lr <- predict(vcu_lr, test_vcu, type="response")
+vcu_pred_lr <- prediction(vcu_predict_lr, test_vcu$above_1k)
+vcu_pred_lr <- performance(vcu_pred_lr, "tpr", "fpr")
+```
+
+Get the true positive and false positive rates for the random forest.
+```{r}
+vcu_predict_rf <- predict(vcu_rf, test_vcu, type="prob")
+vcu_pred_rf <- prediction(vcu_predict_rf[,2], test_vcu$above_1k)
+vcu_pred_rf <- performance(vcu_pred_rf, "tpr", "fpr")
+```
+
+Plot the ROC curve.  Logistic regression appears to outperform the random forest model.
+```{r}
+plot(vcu_pred_lr, col=1)
+plot(vcu_pred_rf, col=2, add=TRUE)
+legend(0.6, 0.4, c("Log. Reg.", "Random Forest"), col=1:2, lwd=3)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results="hide", eval=FALSE}
+purl("4_modeling.Rmd")
+```
+
